@@ -1,10 +1,11 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import type { Database } from '@/lib/types';
 
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
-  return createServerClient(
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -21,6 +22,9 @@ export async function createSupabaseServerClient() {
             // Called from a Server Component; middleware refreshes the session instead.
           }
         },
+      },
+      global: {
+        fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }),
       },
     }
   );

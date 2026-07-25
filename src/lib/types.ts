@@ -1,0 +1,383 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+export type Database = {
+  __InternalSupabase: {
+    PostgrestVersion: "14.5";
+  };
+  public: {
+    Tables: {
+      cleaning_log: {
+        Row: {
+          changed_at: string;
+          changed_by: string | null;
+          id: string;
+          reservation_id: string;
+          room_number: string;
+          status: string;
+        };
+        Insert: {
+          changed_at?: string;
+          changed_by?: string | null;
+          id?: string;
+          reservation_id: string;
+          room_number: string;
+          status: string;
+        };
+        Update: {
+          changed_at?: string;
+          changed_by?: string | null;
+          id?: string;
+          reservation_id?: string;
+          room_number?: string;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cleaning_log_changed_by_fkey";
+            columns: ["changed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cleaning_log_reservation_id_fkey";
+            columns: ["reservation_id"];
+            isOneToOne: false;
+            referencedRelation: "reservations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notifications: {
+        Row: {
+          created_at: string;
+          id: string;
+          message: string;
+          recipient_role: string;
+          reservation_id: string | null;
+          room_number: string | null;
+          type: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          message: string;
+          recipient_role: string;
+          reservation_id?: string | null;
+          room_number?: string | null;
+          type: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          message?: string;
+          recipient_role?: string;
+          reservation_id?: string | null;
+          room_number?: string | null;
+          type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_reservation_id_fkey";
+            columns: ["reservation_id"];
+            isOneToOne: false;
+            referencedRelation: "reservations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      profiles: {
+        Row: {
+          created_at: string | null;
+          department: string | null;
+          email: string | null;
+          full_name: string;
+          id: string;
+          last_active: string | null;
+          role: string;
+          status: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          department?: string | null;
+          email?: string | null;
+          full_name: string;
+          id: string;
+          last_active?: string | null;
+          role: string;
+          status?: string;
+        };
+        Update: {
+          created_at?: string | null;
+          department?: string | null;
+          email?: string | null;
+          full_name?: string;
+          id?: string;
+          last_active?: string | null;
+          role?: string;
+          status?: string;
+        };
+        Relationships: [];
+      };
+      reservation_history: {
+        Row: {
+          archived_at: string;
+          check_in: string;
+          check_out: string;
+          country: string | null;
+          floor: string;
+          guest_name: string;
+          guests_count: number;
+          id: string;
+          nights: number;
+          notes: string | null;
+          original_reservation_id: string;
+          payment_method: string | null;
+          price_per_night: number;
+          room_number: string;
+          room_type: string;
+          total: number;
+        };
+        Insert: {
+          archived_at?: string;
+          check_in: string;
+          check_out: string;
+          country?: string | null;
+          floor: string;
+          guest_name: string;
+          guests_count: number;
+          id?: string;
+          nights: number;
+          notes?: string | null;
+          original_reservation_id: string;
+          payment_method?: string | null;
+          price_per_night: number;
+          room_number: string;
+          room_type: string;
+          total: number;
+        };
+        Update: {
+          archived_at?: string;
+          check_in?: string;
+          check_out?: string;
+          country?: string | null;
+          floor?: string;
+          guest_name?: string;
+          guests_count?: number;
+          id?: string;
+          nights?: number;
+          notes?: string | null;
+          original_reservation_id?: string;
+          payment_method?: string | null;
+          price_per_night?: number;
+          room_number?: string;
+          room_type?: string;
+          total?: number;
+        };
+        Relationships: [];
+      };
+      reservations: {
+        Row: {
+          check_in: string;
+          check_out: string | null;
+          cleaning_status: string;
+          closed_at: string | null;
+          country: string | null;
+          created_at: string;
+          created_by: string | null;
+          guest_name: string;
+          guests_count: number;
+          id: string;
+          maintenance_status: string;
+          nights: number;
+          notes: string | null;
+          payment_method: string | null;
+          phone: string | null;
+          price_per_night: number;
+          room_id: string;
+          status: string;
+          total: number | null;
+        };
+        Insert: {
+          check_in: string;
+          check_out?: string | null;
+          cleaning_status?: string;
+          closed_at?: string | null;
+          country?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          guest_name: string;
+          guests_count: number;
+          id?: string;
+          maintenance_status?: string;
+          nights: number;
+          notes?: string | null;
+          payment_method?: string | null;
+          phone?: string | null;
+          price_per_night: number;
+          room_id: string;
+          status?: string;
+          total?: number | null;
+        };
+        Update: {
+          check_in?: string;
+          check_out?: string | null;
+          cleaning_status?: string;
+          closed_at?: string | null;
+          country?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          guest_name?: string;
+          guests_count?: number;
+          id?: string;
+          maintenance_status?: string;
+          nights?: number;
+          notes?: string | null;
+          payment_method?: string | null;
+          phone?: string | null;
+          price_per_night?: number;
+          room_id?: string;
+          status?: string;
+          total?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reservations_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reservations_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "room_status";
+            referencedColumns: ["room_id"];
+          },
+          {
+            foreignKeyName: "reservations_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      room_types: {
+        Row: {
+          name: string;
+          price_per_night: number;
+        };
+        Insert: {
+          name: string;
+          price_per_night: number;
+        };
+        Update: {
+          name?: string;
+          price_per_night?: number;
+        };
+        Relationships: [];
+      };
+      rooms: {
+        Row: {
+          active: boolean;
+          capacity: number;
+          floor: string;
+          id: string;
+          number: string;
+          type: string;
+        };
+        Insert: {
+          active?: boolean;
+          capacity: number;
+          floor: string;
+          id?: string;
+          number: string;
+          type: string;
+        };
+        Update: {
+          active?: boolean;
+          capacity?: number;
+          floor?: string;
+          id?: string;
+          number?: string;
+          type?: string;
+        };
+        Relationships: [];
+      };
+    };
+    Views: {
+      room_status: {
+        Row: {
+          capacity: number | null;
+          check_in: string | null;
+          check_out: string | null;
+          cleaning_status: string | null;
+          computed_status: string | null;
+          floor: string | null;
+          guest_name: string | null;
+          maintenance_status: string | null;
+          number: string | null;
+          reservation_id: string | null;
+          room_id: string | null;
+          type: string | null;
+        };
+        Relationships: [];
+      };
+    };
+    Functions: {
+      check_long_cleanings: {
+        Args: { p_threshold_minutes?: number };
+        Returns: undefined;
+      };
+      close_reservation: {
+        Args: { p_reservation_id: string };
+        Returns: undefined;
+      };
+      current_user_role: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
+      update_cleaning_status: {
+        Args: { p_reservation_id: string; p_status: string };
+        Returns: undefined;
+      };
+      update_maintenance_status: {
+        Args: { p_reservation_id: string; p_status: string };
+        Returns: undefined;
+      };
+    };
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
+};
+
+export type Tables<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Row"];
+
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type Room = Database["public"]["Tables"]["rooms"]["Row"];
+export type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
+export type ReservationHistory =
+  Database["public"]["Tables"]["reservation_history"]["Row"];
+export type CleaningLogEntry = Database["public"]["Tables"]["cleaning_log"]["Row"];
+export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
+export type RoomStatus = Database["public"]["Views"]["room_status"]["Row"];
+
+export type Role = "recepcion" | "limpieza" | "mantenimiento" | "admin";
+export type UserStatus = "active" | "inactive" | "suspended";
+export type CleaningStatus = "NO" | "PENDIENTE" | "EN PROCESO" | "LIMPIADO";
+export type MaintenanceStatus = "NO" | "PENDIENTE" | "EN PROCESO" | "REALIZADO";
+export type ComputedRoomStatus =
+  | "LIBRE"
+  | "OCUPADA"
+  | "PENDIENTE LIMPIEZA"
+  | "MANTENIMIENTO"
+  | "RESERVADA";
