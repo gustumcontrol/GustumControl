@@ -10,7 +10,9 @@ export type SelectOption = {
   hint?: string;
 };
 
-type PanelRect = { top: number; left: number; width: number };
+type PanelRect =
+  | { placement: 'bottom'; top: number; left: number; width: number }
+  | { placement: 'top'; bottom: number; left: number; width: number };
 
 export function CustomSelect({
   value,
@@ -24,6 +26,7 @@ export function CustomSelect({
   invalid = false,
   triggerBackground,
   triggerColor,
+  placement = 'bottom',
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -36,6 +39,7 @@ export function CustomSelect({
   invalid?: boolean;
   triggerBackground?: string;
   triggerColor?: string;
+  placement?: 'bottom' | 'top';
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -51,7 +55,11 @@ export function CustomSelect({
     const el = triggerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setPanelRect({ top: r.bottom + 4, left: r.left, width: r.width });
+    if (placement === 'top') {
+      setPanelRect({ placement: 'top', bottom: window.innerHeight - r.top + 4, left: r.left, width: r.width });
+    } else {
+      setPanelRect({ placement: 'bottom', top: r.bottom + 4, left: r.left, width: r.width });
+    }
   };
 
   useEffect(() => {
@@ -141,7 +149,9 @@ export function CustomSelect({
             ref={panelRef}
             className="fixed rounded-xl shadow-lg z-[100] flex flex-col overflow-hidden"
             style={{
-              top: panelRect.top,
+              ...(panelRect.placement === 'top'
+                ? { bottom: panelRect.bottom }
+                : { top: panelRect.top }),
               left: panelRect.left,
               width: panelRect.width,
               background: 'var(--card-c)',

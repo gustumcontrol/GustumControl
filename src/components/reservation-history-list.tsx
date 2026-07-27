@@ -6,6 +6,8 @@ import type { SheetData } from 'write-excel-file/browser';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/date-picker';
+import { CustomSelect } from '@/components/custom-select';
+import { Icon } from '@/components/icon';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import { updateReservationHistoryTicket } from '@/lib/actions/reservations';
 import type { ReservationHistory } from '@/lib/types';
@@ -14,6 +16,12 @@ const TYPE_FILTERS: { value: 'all' | 'Doble' | 'Triple'; label: string }[] = [
   { value: 'all', label: 'Todos' },
   { value: 'Doble', label: 'Doble' },
   { value: 'Triple', label: 'Triple' },
+];
+
+const PAGE_SIZE_OPTIONS = [
+  { value: '20', label: '20 por página' },
+  { value: '50', label: '50 por página' },
+  { value: '100', label: '100 por página' },
 ];
 
 const EXPORT_COLUMNS = [
@@ -80,7 +88,7 @@ function TicketCell({ id, ticket }: { id: string; ticket: string | null }) {
       onBlur={save}
       disabled={isPending}
       placeholder="Ticket..."
-      className="w-20 rounded-md bg-transparent text-sm outline-none px-2 py-1.5 border transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+      className="w-24 rounded-md bg-transparent text-sm outline-none px-2 py-1.5 border transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
       style={{ color: 'var(--text-2)', borderColor: 'var(--input)' }}
     />
   );
@@ -93,6 +101,8 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const [pageSize, setPageSize] = useState(20);
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -108,6 +118,12 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
     });
   }, [entries, query, typeFilter, dateFrom, dateTo]);
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const pageEnd = Math.min(currentPage * pageSize, filtered.length);
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -115,7 +131,10 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
           <Input
             placeholder="Buscar por huésped o habitación..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
             className="shrink-0"
             style={{ width: '24rem' }}
           />
@@ -140,7 +159,10 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
               <button
                 key={f.value}
                 type="button"
-                onClick={() => setTypeFilter(f.value)}
+                onClick={() => {
+                  setTypeFilter(f.value);
+                  setPage(1);
+                }}
                 className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer"
                 style={{
                   color: typeFilter === f.value ? 'var(--accent-c)' : 'var(--text-2)',
@@ -162,6 +184,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
                 onChange={(v) => {
                   setDateFrom(v);
                   if (dateTo && v > dateTo) setDateTo('');
+                  setPage(1);
                 }}
                 placeholder="Desde"
               />
@@ -172,7 +195,10 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
             <div className="w-40">
               <DatePicker
                 value={dateTo}
-                onChange={setDateTo}
+                onChange={(v) => {
+                  setDateTo(v);
+                  setPage(1);
+                }}
                 placeholder="Hasta"
                 minDate={dateFrom}
                 align="right"
@@ -184,6 +210,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
                 onClick={() => {
                   setDateFrom('');
                   setDateTo('');
+                  setPage(1);
                 }}
                 className="text-xs font-medium cursor-pointer shrink-0"
                 style={{ color: 'var(--accent-c)' }}
@@ -242,7 +269,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
               </tr>
             </thead>
             <tbody>
-              {filtered.map((e) => (
+              {paginated.map((e) => (
                 <tr key={e.id} style={{ borderBottom: '1px solid var(--line)' }}>
                   <td className="px-4 py-3 font-medium" style={{ color: 'var(--light)' }}>
                     {e.guest_name}
@@ -259,10 +286,10 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
                   <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
                     {e.provincia ?? '—'}
                   </td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
                     {e.check_in}
                   </td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
                     {e.check_out}
                   </td>
                   <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
@@ -280,7 +307,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
                   <td className="px-2 py-2">
                     <TicketCell key={`${e.id}:${e.ticket ?? ''}`} id={e.id} ticket={e.ticket} />
                   </td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-3)' }}>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--text-3)' }}>
                     {new Date(e.archived_at).toLocaleDateString()}
                   </td>
                 </tr>
@@ -289,6 +316,90 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
           </table>
         </div>
       )}
+
+      {filtered.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+            {pageStart}–{pageEnd} de {filtered.length}
+          </p>
+
+          <div className="flex items-center gap-3">
+            <div className="w-40">
+              <CustomSelect
+                value={String(pageSize)}
+                onChange={(v) => {
+                  setPageSize(Number(v));
+                  setPage(1);
+                }}
+                size="sm"
+                placement="top"
+                options={PAGE_SIZE_OPTIONS}
+              />
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                style={{ color: 'var(--text-2)' }}
+              >
+                <Icon name="arrow-left" style="solid" size={11} color="var(--text-3)" />
+                Prev
+              </button>
+
+              {getPageWindow(currentPage, totalPages).map((p, i) =>
+                p === '…' ? (
+                  <span key={`ellipsis-${i}`} className="px-2 text-sm" style={{ color: 'var(--text-3)' }}>
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPage(p)}
+                    className="min-w-8 h-8 px-2 rounded-md text-sm font-medium cursor-pointer transition-colors"
+                    style={{
+                      background: p === currentPage ? 'var(--accent-c)' : 'var(--raised)',
+                      color: p === currentPage ? 'var(--accent-ink)' : 'var(--text-2)',
+                    }}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                style={{ color: 'var(--text-2)' }}
+              >
+                Next
+                <Icon name="arrow-right" style="solid" size={11} color="var(--text-3)" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function getPageWindow(current: number, total: number): (number | '…')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+  const pages = new Set<number>([1, total, current - 1, current, current + 1]);
+  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+
+  const result: (number | '…')[] = [];
+  let prev = 0;
+  for (const p of sorted) {
+    if (prev && p - prev > 1) result.push('…');
+    result.push(p);
+    prev = p;
+  }
+  return result;
 }

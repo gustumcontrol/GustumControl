@@ -4,20 +4,17 @@ import { useEffect, useState } from 'react';
 import { NavLinks } from '@/components/nav-links';
 import { NotificationsBell } from '@/components/notifications-bell';
 import { Icon } from '@/components/icon';
-import type { Notification } from '@/lib/types';
 
 const STORAGE_KEY = 'sidebar-collapsed';
 
 export function Sidebar({
   nav,
-  notifications,
   userId,
   displayName,
   roleLabel,
   initial,
 }: {
   nav: { href: string; label: string; icon: string }[];
-  notifications: Notification[];
   userId: string;
   displayName: string;
   roleLabel: string;
@@ -82,7 +79,7 @@ export function Sidebar({
         <NavLinks items={nav} variant="sidebar" collapsed={collapsed} />
       </nav>
 
-      <NotificationsBell initialNotifications={notifications} userId={userId} collapsed={collapsed} />
+      <NotificationsBell userId={userId} collapsed={collapsed} />
 
       <div className="p-3 shrink-0" style={{ borderTop: '1px solid var(--line)' }}>
         <div

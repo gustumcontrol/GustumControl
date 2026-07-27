@@ -6,27 +6,22 @@ import { AddUserDialog } from '@/components/add-user-dialog';
 export default async function UsuariosPage() {
   const supabase = await createSupabaseServerClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   if (!user) {
     redirect('/login');
   }
 
-  const { data: callerProfile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
+  const [{ data: callerProfile }, { data: users }] = await Promise.all([
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
+    supabase.from('profiles').select('*').order('full_name'),
+  ]);
 
   if (callerProfile?.role !== 'admin') {
     redirect('/dashboard');
   }
-
-  const { data: users } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('full_name');
 
   return (
     <div>

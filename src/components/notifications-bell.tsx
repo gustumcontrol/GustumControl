@@ -28,16 +28,14 @@ const TYPE_ROUTE: Record<string, string> = {
 };
 
 export function NotificationsBell({
-  initialNotifications,
   userId,
   collapsed = false,
 }: {
-  initialNotifications: Notification[];
   userId: string;
   collapsed?: boolean;
 }) {
   const router = useRouter();
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,6 +49,23 @@ export function NotificationsBell({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setReadIds(stored ? new Set(JSON.parse(stored)) : new Set());
   }, [storageKey]);
+
+  useEffect(() => {
+    // Se hace desde el cliente (no en el layout del servidor) para no
+    // bloquear la navegación entre páginas con esta consulta en cada clic.
+    let cancelled = false;
+    supabase
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        if (!cancelled && data) setNotifications(data);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const channel = supabase

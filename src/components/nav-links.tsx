@@ -27,6 +27,7 @@ export function NavLinks({
             <Link
               key={item.href}
               href={item.href}
+              prefetch
               title={collapsed ? item.label : undefined}
               className={`flex items-center py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out ${collapsed ? 'gap-0 px-[13px]' : 'gap-3 px-3'}`}
               style={{
