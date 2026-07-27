@@ -41,7 +41,13 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ success: true, user: data.user });
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+
+    return NextResponse.json({ success: true, user: data.user, role: profile?.role ?? null });
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

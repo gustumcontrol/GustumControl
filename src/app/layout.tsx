@@ -11,7 +11,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "GusStum Control",
+  title: "Gustum Control",
   description: "Panel operativo del hotel",
   icons: {
     icon: "/flavicon.png",

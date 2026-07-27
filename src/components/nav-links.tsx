@@ -7,9 +7,11 @@ import { Icon } from '@/components/icon';
 export function NavLinks({
   items,
   variant = 'top',
+  collapsed = false,
 }: {
   items: { href: string; label: string; icon?: string }[];
   variant?: 'top' | 'mobile' | 'sidebar';
+  collapsed?: boolean;
 }) {
   const pathname = usePathname();
 
@@ -25,7 +27,8 @@ export function NavLinks({
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+              title={collapsed ? item.label : undefined}
+              className={`flex items-center py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out ${collapsed ? 'gap-0 px-[13px]' : 'gap-3 px-3'}`}
               style={{
                 color: active ? 'var(--accent-c)' : 'var(--text-2)',
                 background: active ? 'var(--accent-dim)' : 'transparent',
@@ -37,9 +40,15 @@ export function NavLinks({
                   style={active ? 'solid' : 'regular'}
                   size={18}
                   color={active ? 'var(--accent-c)' : 'var(--text-3)'}
+                  className="shrink-0"
                 />
               )}
-              {item.label}
+              <span
+                className="overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out"
+                style={{ maxWidth: collapsed ? 0 : 160, opacity: collapsed ? 0 : 1 }}
+              >
+                {item.label}
+              </span>
             </Link>
           );
         }

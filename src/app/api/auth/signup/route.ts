@@ -13,6 +13,7 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createSupabaseServerClient();
+    const origin = new URL(request.url).origin;
 
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
         data: {
           full_name: `${firstName.trim()} ${lastName.trim()}`,
         },
+        emailRedirectTo: `${origin}/login`,
       },
     });
 

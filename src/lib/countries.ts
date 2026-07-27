@@ -230,4 +230,4 @@ export const COUNTRIES: Country[] = [
 ];
 
 // Países más frecuentes para un hotel en RD — aparecen primero en el selector.
-export const POPULAR_COUNTRY_CODES = ['DO', 'US', 'ES', 'PR', 'CO', 'VE', 'HT', 'CA', 'FR', 'MX'];
+export const POPULAR_COUNTRY_CODES = ['FR', 'MA', 'GB', 'NL', 'DE', 'ES'];

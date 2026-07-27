@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react';
 import { updateMaintenanceStatus } from '@/lib/actions/maintenance';
+import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import type { MaintenanceStatus } from '@/lib/types';
 
 export type MaintenanceTask = {
@@ -27,6 +28,7 @@ const BUTTON_COLOR: Record<string, string> = {
 };
 
 export function MaintenanceTaskList({ tasks }: { tasks: MaintenanceTask[] }) {
+  useRealtimeRefresh(['reservations']);
   const [isPending, startTransition] = useTransition();
 
   if (tasks.length === 0) {

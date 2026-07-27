@@ -11,14 +11,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/icon';
 import { closeReservation } from '@/lib/actions/reservations';
 
 export function CloseReservationButton({
   reservationId,
   guestName,
+  variant = 'outline',
 }: {
   reservationId: string;
   guestName: string;
+  variant?: 'default' | 'outline';
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
@@ -38,7 +41,8 @@ export function CloseReservationButton({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+      <DialogTrigger render={<Button variant={variant} size="sm" />}>
+        <Icon name="door-open" style="regular" size={12} />
         Cerrar reserva
       </DialogTrigger>
       <DialogContent>

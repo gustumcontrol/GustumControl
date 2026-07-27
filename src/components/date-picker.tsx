@@ -33,14 +33,19 @@ export function DatePicker({
   placeholder = 'Selecciona una fecha',
   invalid = false,
   id,
+  minDate,
+  align = 'left',
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   invalid?: boolean;
   id?: string;
+  minDate?: string;
+  align?: 'left' | 'right';
 }) {
   const selectedDate = parseISODate(value);
+  const minDateObj = parseISODate(minDate ?? '');
   const [open, setOpen] = useState(false);
   const [viewDate, setViewDate] = useState(() => selectedDate ?? new Date());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -79,7 +84,10 @@ export function DatePicker({
   const goPrevMonth = () => setViewDate(new Date(year, month - 1, 1));
   const goNextMonth = () => setViewDate(new Date(year, month + 1, 1));
 
+  const isDisabledDay = (d: Date) => !!minDateObj && d < minDateObj;
+
   const handleSelectDay = (d: Date) => {
+    if (isDisabledDay(d)) return;
     onChange(toISODate(d));
     setOpen(false);
   };
@@ -108,7 +116,7 @@ export function DatePicker({
 
       {open && (
         <div
-          className="absolute left-0 top-full mt-1 rounded-xl shadow-lg z-30 p-3 w-72"
+          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-1 rounded-xl shadow-lg z-30 p-3 w-72`}
           style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
         >
           <div className="flex items-center justify-between mb-2">
@@ -148,15 +156,23 @@ export function DatePicker({
               if (!d) return <span key={i} />;
               const isSelected = selectedDate && isSameDay(d, selectedDate);
               const isToday = isSameDay(d, today);
+              const disabled = isDisabledDay(d);
               return (
                 <button
                   key={i}
                   type="button"
+                  disabled={disabled}
                   onClick={() => handleSelectDay(d)}
-                  className="w-9 h-9 rounded-md text-sm cursor-pointer transition-colors"
+                  className="w-9 h-9 rounded-md text-sm transition-colors disabled:cursor-not-allowed"
                   style={{
+                    cursor: disabled ? 'not-allowed' : 'pointer',
                     background: isSelected ? 'var(--accent-c)' : 'transparent',
-                    color: isSelected ? 'var(--accent-ink)' : 'var(--light)',
+                    color: disabled
+                      ? 'var(--text-3)'
+                      : isSelected
+                        ? 'var(--accent-ink)'
+                        : 'var(--light)',
+                    opacity: disabled ? 0.4 : 1,
                     fontWeight: isToday && !isSelected ? 700 : 400,
                     border: isToday && !isSelected ? '1px solid var(--accent-c)' : '1px solid transparent',
                   }}

@@ -12,6 +12,21 @@ export type Database = {
   };
   public: {
     Tables: {
+      board_plans: {
+        Row: {
+          name: string;
+          price_per_person: number;
+        };
+        Insert: {
+          name: string;
+          price_per_person: number;
+        };
+        Update: {
+          name?: string;
+          price_per_person?: number;
+        };
+        Relationships: [];
+      };
       cleaning_log: {
         Row: {
           changed_at: string;
@@ -128,6 +143,7 @@ export type Database = {
       reservation_history: {
         Row: {
           archived_at: string;
+          board_plan: string | null;
           check_in: string;
           check_out: string;
           country: string | null;
@@ -135,17 +151,21 @@ export type Database = {
           guest_name: string;
           guests_count: number;
           id: string;
+          municipio: string | null;
           nights: number;
           notes: string | null;
           original_reservation_id: string;
           payment_method: string | null;
           price_per_night: number;
+          provincia: string | null;
           room_number: string;
           room_type: string;
+          ticket: string | null;
           total: number;
         };
         Insert: {
           archived_at?: string;
+          board_plan?: string | null;
           check_in: string;
           check_out: string;
           country?: string | null;
@@ -153,17 +173,21 @@ export type Database = {
           guest_name: string;
           guests_count: number;
           id?: string;
+          municipio?: string | null;
           nights: number;
           notes?: string | null;
           original_reservation_id: string;
           payment_method?: string | null;
           price_per_night: number;
+          provincia?: string | null;
           room_number: string;
           room_type: string;
+          ticket?: string | null;
           total: number;
         };
         Update: {
           archived_at?: string;
+          board_plan?: string | null;
           check_in?: string;
           check_out?: string;
           country?: string | null;
@@ -171,19 +195,23 @@ export type Database = {
           guest_name?: string;
           guests_count?: number;
           id?: string;
+          municipio?: string | null;
           nights?: number;
           notes?: string | null;
           original_reservation_id?: string;
           payment_method?: string | null;
           price_per_night?: number;
+          provincia?: string | null;
           room_number?: string;
           room_type?: string;
+          ticket?: string | null;
           total?: number;
         };
         Relationships: [];
       };
       reservations: {
         Row: {
+          board_plan: string | null;
           check_in: string;
           check_out: string | null;
           cleaning_status: string;
@@ -195,16 +223,19 @@ export type Database = {
           guests_count: number;
           id: string;
           maintenance_status: string;
+          municipio: string | null;
           nights: number;
           notes: string | null;
           payment_method: string | null;
           phone: string | null;
           price_per_night: number;
+          provincia: string | null;
           room_id: string;
           status: string;
           total: number | null;
         };
         Insert: {
+          board_plan?: string | null;
           check_in: string;
           check_out?: string | null;
           cleaning_status?: string;
@@ -216,16 +247,19 @@ export type Database = {
           guests_count: number;
           id?: string;
           maintenance_status?: string;
+          municipio?: string | null;
           nights: number;
           notes?: string | null;
           payment_method?: string | null;
           phone?: string | null;
           price_per_night: number;
+          provincia?: string | null;
           room_id: string;
           status?: string;
           total?: number | null;
         };
         Update: {
+          board_plan?: string | null;
           check_in?: string;
           check_out?: string | null;
           cleaning_status?: string;
@@ -237,16 +271,25 @@ export type Database = {
           guests_count?: number;
           id?: string;
           maintenance_status?: string;
+          municipio?: string | null;
           nights?: number;
           notes?: string | null;
           payment_method?: string | null;
           phone?: string | null;
           price_per_night?: number;
+          provincia?: string | null;
           room_id?: string;
           status?: string;
           total?: number | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "reservations_board_plan_fkey";
+            columns: ["board_plan"];
+            isOneToOne: false;
+            referencedRelation: "board_plans";
+            referencedColumns: ["name"];
+          },
           {
             foreignKeyName: "reservations_created_by_fkey";
             columns: ["created_by"];
@@ -363,6 +406,7 @@ export type Tables<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Row"];
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type BoardPlan = Database["public"]["Tables"]["board_plans"]["Row"];
 export type Room = Database["public"]["Tables"]["rooms"]["Row"];
 export type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
 export type ReservationHistory =

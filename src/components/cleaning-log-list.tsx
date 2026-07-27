@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 
 export type CleaningLogRow = {
   id: string;
@@ -134,6 +135,7 @@ function SessionDetailDialog({
 }
 
 export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
+  useRealtimeRefresh(['cleaning_log']);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<CleaningSession | null>(null);
 

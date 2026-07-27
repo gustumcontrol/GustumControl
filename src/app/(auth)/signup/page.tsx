@@ -53,7 +53,7 @@ export default function SignupPage() {
       >
         <div className="flex items-center justify-center mb-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="GusStum Control" className="h-9 w-auto" />
+          <img src="/logo.png" alt="Gustum Control" className="h-9 w-auto" />
         </div>
 
         <h1 className="text-xl font-semibold text-center mb-1" style={{ color: 'var(--light)' }}>

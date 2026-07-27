@@ -12,13 +12,14 @@ export default async function NuevaReservaPage({
   const { room } = await searchParams;
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: freeRooms }, { data: roomTypes }] = await Promise.all([
+  const [{ data: freeRooms }, { data: roomTypes }, { data: boardPlans }] = await Promise.all([
     supabase
       .from('room_status')
       .select('*')
       .in('computed_status', ['LIBRE', 'RESERVADA'])
       .order('number'),
     supabase.from('room_types').select('*'),
+    supabase.from('board_plans').select('*').order('price_per_person'),
   ]);
 
   return (
@@ -26,6 +27,7 @@ export default async function NuevaReservaPage({
       <Button
         variant="outline"
         render={<Link href="/reservas" />}
+        nativeButton={false}
         className="absolute left-0 top-0 w-fit"
         style={{ color: '#323E51', background: '#E2E5EC', border: 'none' }}
       >
@@ -44,6 +46,7 @@ export default async function NuevaReservaPage({
           <ReservationForm
             rooms={freeRooms ?? []}
             roomTypes={roomTypes ?? []}
+            boardPlans={boardPlans ?? []}
             defaultRoomId={room}
           />
         </div>

@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { DEFAULT_ROUTE_BY_ROLE } from '@/lib/roles';
+import type { Role } from '@/lib/types';
 
 function LoginForm() {
   const router = useRouter();
@@ -39,7 +41,8 @@ function LoginForm() {
       const data = await response.json();
 
       if (response.ok) {
-        router.push('/dashboard');
+        const role = data.role as Role | null;
+        router.push(role ? (DEFAULT_ROUTE_BY_ROLE[role] ?? '/dashboard') : '/dashboard');
         router.refresh();
       } else {
         setError(data.error || 'Error de autenticación');
@@ -115,7 +118,7 @@ export default function LoginPage() {
       >
         <div className="flex items-center justify-center mb-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="GusStum Control" className="h-9 w-auto" />
+          <img src="/logo.png" alt="Gustum Control" className="h-9 w-auto" />
         </div>
 
         <h1 className="text-xl font-semibold text-center mb-1" style={{ color: 'var(--light)' }}>

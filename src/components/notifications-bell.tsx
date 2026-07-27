@@ -30,9 +30,11 @@ const TYPE_ROUTE: Record<string, string> = {
 export function NotificationsBell({
   initialNotifications,
   userId,
+  collapsed = false,
 }: {
   initialNotifications: Notification[];
   userId: string;
+  collapsed?: boolean;
 }) {
   const router = useRouter();
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -109,16 +111,30 @@ export function NotificationsBell({
   };
 
   return (
-    <div className="relative px-3 pb-1" ref={containerRef}>
+    <div className="relative pb-1 px-3" ref={containerRef}>
       <button
         type="button"
+        title={collapsed ? 'Notificaciones' : undefined}
         onClick={() => setOpen((o) => !o)}
-        className="relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors"
+        className={`relative w-full flex items-center py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-all duration-300 ease-in-out ${collapsed ? 'gap-0 px-[13px]' : 'gap-3 px-3'}`}
         style={{ color: 'var(--text-2)', background: open ? 'var(--raised)' : 'transparent' }}
       >
-        <Icon name="bell" style="regular" size={16} color="var(--text-3)" />
-        Notificaciones
-        {unreadCount > 0 && (
+        <span className="relative shrink-0">
+          <Icon name="bell" style="regular" size={16} color="var(--text-3)" />
+          {collapsed && unreadCount > 0 && (
+            <span
+              className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
+              style={{ background: 'var(--accent-c)' }}
+            />
+          )}
+        </span>
+        <span
+          className="overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out"
+          style={{ maxWidth: collapsed ? 0 : 160, opacity: collapsed ? 0 : 1 }}
+        >
+          Notificaciones
+        </span>
+        {!collapsed && unreadCount > 0 && (
           <span
             className="ml-auto text-xs font-semibold rounded-full min-w-5 h-5 px-1 flex items-center justify-center"
             style={{ background: 'var(--accent-c)', color: 'var(--accent-ink)' }}
@@ -130,7 +146,7 @@ export function NotificationsBell({
 
       {open && (
         <div
-          className="absolute bottom-full left-3 right-3 mb-2 w-80 max-h-[28rem] rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden origin-bottom"
+          className={`absolute bottom-full mb-2 w-80 max-h-[28rem] rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden origin-bottom ${collapsed ? 'left-full ml-2' : 'left-3 right-3'}`}
           style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
         >
           <div

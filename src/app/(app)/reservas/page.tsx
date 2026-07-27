@@ -5,17 +5,21 @@ import { Button } from '@/components/ui/button';
 
 export default async function ReservasPage() {
   const supabase = await createSupabaseServerClient();
-  const { data } = await supabase
-    .from('reservations')
-    .select(
-      'id, guest_name, guests_count, check_in, check_out, total, cleaning_status, maintenance_status, rooms(number, floor)'
-    )
-    .eq('status', 'ACTIVA')
-    .order('created_at', { ascending: false });
+  const [{ data }, { data: roomTypes }, { data: boardPlans }] = await Promise.all([
+    supabase
+      .from('reservations')
+      .select(
+        'id, guest_name, guests_count, check_in, check_out, nights, total, price_per_night, phone, country, municipio, provincia, board_plan, payment_method, notes, cleaning_status, maintenance_status, rooms(number, floor, type)'
+      )
+      .eq('status', 'ACTIVA')
+      .order('created_at', { ascending: false }),
+    supabase.from('room_types').select('*'),
+    supabase.from('board_plans').select('*').order('price_per_person'),
+  ]);
 
   const reservations: ReservationRow[] = (data ?? []).map((r) => ({
     ...r,
-    room: Array.isArray(r.rooms) ? r.rooms[0] ?? null : r.rooms,
+    room: (Array.isArray(r.rooms) ? r.rooms[0] : r.rooms) ?? null,
   }));
 
   return (
@@ -28,7 +32,11 @@ export default async function ReservasPage() {
           <Button>Nueva reserva</Button>
         </Link>
       </div>
-      <ReservationList reservations={reservations} />
+      <ReservationList
+        reservations={reservations}
+        roomTypes={roomTypes ?? []}
+        boardPlans={boardPlans ?? []}
+      />
     </div>
   );
 }

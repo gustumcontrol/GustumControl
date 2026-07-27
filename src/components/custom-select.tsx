@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Icon } from '@/components/icon';
 
 export type SelectOption = {
@@ -8,6 +9,8 @@ export type SelectOption = {
   label: string;
   hint?: string;
 };
+
+type PanelRect = { top: number; left: number; width: number };
 
 export function CustomSelect({
   value,
@@ -19,6 +22,8 @@ export function CustomSelect({
   disabled = false,
   size = 'default',
   invalid = false,
+  triggerBackground,
+  triggerColor,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -29,17 +34,43 @@ export function CustomSelect({
   disabled?: boolean;
   size?: 'default' | 'sm';
   invalid?: boolean;
+  triggerBackground?: string;
+  triggerColor?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [panelRect, setPanelRect] = useState<PanelRect | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const selected = options.find((o) => o.value === value);
 
+  const updatePanelRect = () => {
+    const el = triggerRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setPanelRect({ top: r.bottom + 4, left: r.left, width: r.width });
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    updatePanelRect();
+    window.addEventListener('scroll', updatePanelRect, true);
+    window.addEventListener('resize', updatePanelRect);
+    return () => {
+      window.removeEventListener('scroll', updatePanelRect, true);
+      window.removeEventListener('resize', updatePanelRect);
+    };
+  }, [open]);
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const insideTrigger = containerRef.current?.contains(target);
+      const insidePanel = panelRef.current?.contains(target);
+      if (!insideTrigger && !insidePanel) {
         setOpen(false);
         setQuery('');
       }
@@ -72,17 +103,22 @@ export function CustomSelect({
   return (
     <div className="relative" ref={containerRef}>
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
-        className={`flex w-full items-center gap-2 rounded-lg border bg-transparent outline-none cursor-pointer transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 ${triggerText}`}
+        className={`flex w-full items-center gap-2 rounded-lg border outline-none cursor-pointer transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 ${triggerText}`}
         style={{
           padding: triggerPadding,
-          borderColor: invalid ? '#dc2626' : 'var(--input)',
+          borderColor: invalid ? '#dc2626' : triggerBackground ? 'transparent' : 'var(--input)',
+          background: triggerBackground ?? 'transparent',
         }}
       >
         {selected ? (
-          <span className="flex-1 text-left truncate" style={{ color: 'var(--light)' }}>
+          <span
+            className="flex-1 text-left truncate font-medium"
+            style={{ color: triggerColor ?? 'var(--light)' }}
+          >
             {selected.label}
           </span>
         ) : (
@@ -90,60 +126,75 @@ export function CustomSelect({
             {placeholder}
           </span>
         )}
-        <Icon name="chevron-down" style="solid" size={size === 'sm' ? 9 : 11} color="var(--text-3)" />
+        <Icon
+          name="chevron-down"
+          style="solid"
+          size={size === 'sm' ? 9 : 11}
+          color={triggerColor ?? 'var(--text-3)'}
+        />
       </button>
 
-      {open && (
-        <div
-          className="absolute left-0 right-0 top-full mt-1 rounded-xl shadow-lg z-30 flex flex-col overflow-hidden"
-          style={{ background: 'var(--card-c)', border: '1px solid var(--line)', minWidth: '100%' }}
-        >
-          {searchable && (
-            <div className="p-2" style={{ borderBottom: '1px solid var(--line)' }}>
-              <input
-                ref={searchRef}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={searchPlaceholder}
-                className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring"
-              />
-            </div>
-          )}
-          <div className="max-h-64 overflow-y-auto p-1.5">
-            {filtered.length === 0 ? (
-              <p className="px-3 py-4 text-sm text-center" style={{ color: 'var(--text-3)' }}>
-                Sin resultados.
-              </p>
-            ) : (
-              filtered.map((o) => {
-                const isSelected = o.value === value;
-                return (
-                  <button
-                    key={o.value}
-                    type="button"
-                    onClick={() => handleSelect(o.value)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-left cursor-pointer transition-colors"
-                    style={{
-                      background: isSelected ? 'var(--accent-dim)' : 'transparent',
-                      color: isSelected ? 'var(--accent-c)' : 'var(--text-2)',
-                    }}
-                  >
-                    <span className="flex-1 min-w-0">
-                      <span className="block truncate">{o.label}</span>
-                      {o.hint && (
-                        <span className="block truncate text-xs" style={{ color: 'var(--text-3)' }}>
-                          {o.hint}
-                        </span>
-                      )}
-                    </span>
-                    {isSelected && <Icon name="check" style="solid" size={12} color="var(--accent-c)" />}
-                  </button>
-                );
-              })
+      {open &&
+        panelRect &&
+        createPortal(
+          <div
+            ref={panelRef}
+            className="fixed rounded-xl shadow-lg z-[100] flex flex-col overflow-hidden"
+            style={{
+              top: panelRect.top,
+              left: panelRect.left,
+              width: panelRect.width,
+              background: 'var(--card-c)',
+              border: '1px solid var(--line)',
+            }}
+          >
+            {searchable && (
+              <div className="p-2" style={{ borderBottom: '1px solid var(--line)' }}>
+                <input
+                  ref={searchRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring"
+                />
+              </div>
             )}
-          </div>
-        </div>
-      )}
+            <div className="max-h-64 overflow-y-auto p-1.5">
+              {filtered.length === 0 ? (
+                <p className="px-3 py-4 text-sm text-center" style={{ color: 'var(--text-3)' }}>
+                  Sin resultados.
+                </p>
+              ) : (
+                filtered.map((o) => {
+                  const isSelected = o.value === value;
+                  return (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => handleSelect(o.value)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-left cursor-pointer transition-colors"
+                      style={{
+                        background: isSelected ? 'var(--accent-dim)' : 'transparent',
+                        color: isSelected ? 'var(--accent-c)' : 'var(--text-2)',
+                      }}
+                    >
+                      <span className="flex-1 min-w-0">
+                        <span className="block truncate">{o.label}</span>
+                        {o.hint && (
+                          <span className="block truncate text-xs" style={{ color: 'var(--text-3)' }}>
+                            {o.hint}
+                          </span>
+                        )}
+                      </span>
+                      {isSelected && <Icon name="check" style="solid" size={12} color="var(--accent-c)" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

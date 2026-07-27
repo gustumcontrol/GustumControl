@@ -10,10 +10,13 @@ import { CountrySelect } from '@/components/country-select';
 import { CustomSelect } from '@/components/custom-select';
 import { NumberSelect } from '@/components/number-select';
 import { DatePicker } from '@/components/date-picker';
+import { MunicipioInput } from '@/components/municipio-input';
 import { createReservation } from '@/lib/actions/reservations';
+import { PROVINCES_BY_COUNTRY } from '@/lib/provinces';
 import type { RoomStatus } from '@/lib/types';
 
 type RoomTypePrice = { name: string; price_per_night: number };
+type BoardPlanPrice = { name: string; price_per_person: number };
 
 type FieldErrors = Partial<
   Record<
@@ -22,6 +25,8 @@ type FieldErrors = Partial<
     | 'guestsCount'
     | 'phone'
     | 'country'
+    | 'municipio'
+    | 'provincia'
     | 'checkIn'
     | 'nights'
     | 'paymentMethod'
@@ -42,10 +47,12 @@ function FieldError({ message }: { message?: string }) {
 export function ReservationForm({
   rooms,
   roomTypes,
+  boardPlans,
   defaultRoomId,
 }: {
   rooms: RoomStatus[];
   roomTypes: RoomTypePrice[];
+  boardPlans: BoardPlanPrice[];
   defaultRoomId?: string;
 }) {
   const router = useRouter();
@@ -53,14 +60,15 @@ export function ReservationForm({
   const [roomId, setRoomId] = useState(defaultRoom?.room_id ?? '');
   const [guestName, setGuestName] = useState('');
   const [guestsCount, setGuestsCount] = useState(1);
+  const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [checkIn, setCheckIn] = useState(() => new Date().toISOString().slice(0, 10));
   const [nights, setNights] = useState(1);
-  const [price, setPrice] = useState(
-    () => roomTypes.find((t) => t.name === defaultRoom?.type)?.price_per_night ?? 0
-  );
+  const [boardPlan, setBoardPlan] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState('');
+  const [municipio, setMunicipio] = useState('');
+  const [provincia, setProvincia] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -70,8 +78,20 @@ export function ReservationForm({
     () => new Map(roomTypes.map((t) => [t.name, t.price_per_night])),
     [roomTypes]
   );
+  const boardPriceByName = useMemo(
+    () => new Map(boardPlans.map((b) => [b.name, b.price_per_person])),
+    [boardPlans]
+  );
 
   const selectedRoom = rooms.find((r) => r.room_id === roomId);
+  const basePrice = selectedRoom?.type ? priceByType.get(selectedRoom.type) ?? 0 : 0;
+  const price = boardPlan
+    ? (boardPriceByName.get(boardPlan) ?? 0) * (Number(guestsCount) || 0)
+    : basePrice;
+  const provinceOptions = useMemo(
+    () => (PROVINCES_BY_COUNTRY[country] ?? []).map((name) => ({ value: name, label: name })),
+    [country]
+  );
 
   const checkOut = useMemo(() => {
     if (!checkIn || !nights) return '';
@@ -94,11 +114,6 @@ export function ReservationForm({
   const handleRoomChange = (id: string) => {
     setRoomId(id);
     if (id) clearFieldError('roomId');
-    const room = rooms.find((r) => r.room_id === id);
-    if (room?.type) {
-      const defaultPrice = priceByType.get(room.type);
-      if (defaultPrice != null) setPrice(defaultPrice);
-    }
   };
 
   const validate = (): FieldErrors => {
@@ -108,10 +123,12 @@ export function ReservationForm({
     if (!guestsCount || guestsCount < 1) errors.guestsCount = 'Falta la cantidad de personas.';
     if (!phone.trim()) errors.phone = 'Falta el teléfono.';
     if (!country) errors.country = 'Falta seleccionar el país.';
+    if (!municipio.trim()) errors.municipio = 'Falta el municipio.';
+    if (!provincia) errors.provincia = 'Falta seleccionar la provincia.';
     if (!checkIn) errors.checkIn = 'Falta la fecha de entrada.';
+    else if (checkIn < todayISO) errors.checkIn = 'La fecha de entrada no puede ser anterior a hoy.';
     if (!nights || nights < 1) errors.nights = 'Falta la cantidad de noches.';
     if (!paymentMethod) errors.paymentMethod = 'Falta seleccionar el método de pago.';
-    if (!notes.trim()) errors.notes = 'Falta agregar una nota.';
     return errors;
   };
 
@@ -131,9 +148,12 @@ export function ReservationForm({
         checkIn,
         nights: Number(nights),
         pricePerNight: Number(price),
+        boardPlan: boardPlan || undefined,
         paymentMethod: paymentMethod || undefined,
         phone: phone || undefined,
         country: country || undefined,
+        municipio: municipio || undefined,
+        provincia: provincia || undefined,
         notes: notes || undefined,
       });
 
@@ -235,11 +255,48 @@ export function ReservationForm({
           value={country}
           onChange={(v) => {
             setCountry(v);
+            setProvincia('');
             if (v) clearFieldError('country');
           }}
           invalid={!!fieldErrors.country}
         />
         <FieldError message={fieldErrors.country} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label>Provincia</Label>
+          <CustomSelect
+            value={provincia}
+            onChange={(v) => {
+              setProvincia(v);
+              setMunicipio('');
+              if (v) clearFieldError('provincia');
+            }}
+            placeholder={country ? 'Selecciona una provincia' : 'Selecciona primero el país'}
+            searchable
+            searchPlaceholder="Buscar provincia..."
+            disabled={!country}
+            invalid={!!fieldErrors.provincia}
+            options={provinceOptions}
+          />
+          <FieldError message={fieldErrors.provincia} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="municipio">Municipio</Label>
+          <MunicipioInput
+            id="municipio"
+            value={municipio}
+            onChange={(v) => {
+              setMunicipio(v);
+              if (v.trim()) clearFieldError('municipio');
+            }}
+            country={country}
+            provincia={provincia}
+            invalid={!!fieldErrors.municipio}
+          />
+          <FieldError message={fieldErrors.municipio} />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -250,8 +307,9 @@ export function ReservationForm({
             value={checkIn}
             onChange={(v) => {
               setCheckIn(v);
-              if (v) clearFieldError('checkIn');
+              if (v && v >= todayISO) clearFieldError('checkIn');
             }}
+            minDate={todayISO}
             invalid={!!fieldErrors.checkIn}
           />
           <FieldError message={fieldErrors.checkIn} />
@@ -271,6 +329,22 @@ export function ReservationForm({
         </div>
       </div>
 
+      <div className="flex flex-col gap-1.5">
+        <Label>Régimen</Label>
+        <CustomSelect
+          value={boardPlan}
+          onChange={setBoardPlan}
+          placeholder="Desayuno incluido"
+          options={[
+            { value: '', label: 'Desayuno incluido' },
+            ...boardPlans.map((b) => ({
+              value: b.name,
+              label: `${b.name} — $${b.price_per_person}/persona`,
+            })),
+          ]}
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="price">Precio por noche</Label>
@@ -282,7 +356,9 @@ export function ReservationForm({
             style={{ background: 'var(--raised)' }}
           />
           <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-            Fijo según el tipo de habitación.
+            {boardPlan
+              ? `$${boardPriceByName.get(boardPlan) ?? 0} x ${guestsCount} persona${guestsCount === 1 ? '' : 's'}.`
+              : 'Fijo según el tipo de habitación.'}
           </p>
         </div>
         <div className="flex flex-col gap-1.5">

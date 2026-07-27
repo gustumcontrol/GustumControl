@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react';
 import { updateCleaningStatus } from '@/lib/actions/cleaning';
+import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import type { CleaningStatus } from '@/lib/types';
 
 export type CleaningTask = {
@@ -27,6 +28,7 @@ const BUTTON_COLOR: Record<string, string> = {
 };
 
 export function CleaningTaskList({ tasks }: { tasks: CleaningTask[] }) {
+  useRealtimeRefresh(['reservations', 'cleaning_log']);
   const [isPending, startTransition] = useTransition();
 
   if (tasks.length === 0) {

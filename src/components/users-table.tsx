@@ -4,10 +4,11 @@ import { useMemo, useState, useTransition } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CustomSelect } from '@/components/custom-select';
-import { RoleBadge, UserStatusBadge } from '@/components/user-badges';
+import { RoleBadge, STATUS_STYLES } from '@/components/user-badges';
 import { EditUserDialog } from '@/components/edit-user-dialog';
 import { DeleteUserButton } from '@/components/delete-user-button';
 import { updateUserStatus } from '@/lib/actions/users';
+import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import type { Profile, UserStatus } from '@/lib/types';
 
 const FILTERS: { value: 'all' | UserStatus; label: string }[] = [
@@ -47,6 +48,8 @@ function StatusSelect({ user, disabled }: { user: Profile; disabled: boolean }) 
     });
   };
 
+  const s = STATUS_STYLES[user.status as UserStatus] ?? STATUS_STYLES.active;
+
   return (
     <div className="w-32">
       <CustomSelect
@@ -54,6 +57,8 @@ function StatusSelect({ user, disabled }: { user: Profile; disabled: boolean }) 
         onChange={(v) => handleChange(v as UserStatus)}
         disabled={disabled || isPending}
         size="sm"
+        triggerBackground={s.bg}
+        triggerColor={s.fg}
         options={[
           { value: 'active', label: 'Activo' },
           { value: 'inactive', label: 'Inactivo' },
@@ -72,6 +77,7 @@ export function UsersTable({
   users: Profile[];
   currentUserId: string;
 }) {
+  useRealtimeRefresh(['profiles']);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | UserStatus>('all');
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
@@ -175,10 +181,7 @@ export function UsersTable({
                       {u.department || '—'}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex flex-col gap-1">
-                        <UserStatusBadge status={u.status} />
-                        <StatusSelect user={u} disabled={isSelf} />
-                      </div>
+                      <StatusSelect user={u} disabled={isSelf} />
                     </td>
                     <td className="px-4 py-3" style={{ color: 'var(--text-3)' }}>
                       {relativeTime(u.last_active)}

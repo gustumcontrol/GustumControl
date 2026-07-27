@@ -19,20 +19,8 @@ export function RoleBadge({ role }: { role: string }) {
   );
 }
 
-const STATUS_STYLES: Record<UserStatus, { bg: string; fg: string; label: string }> = {
-  active: { bg: 'rgba(34,197,94,0.12)', fg: '#16a34a', label: 'Activo' },
+export const STATUS_STYLES: Record<UserStatus, { bg: string; fg: string; label: string }> = {
+  active: { bg: 'rgba(253,136,27,0.14)', fg: '#FD881B', label: 'Activo' },
   inactive: { bg: 'rgba(148,163,184,0.18)', fg: '#64748b', label: 'Inactivo' },
   suspended: { bg: 'rgba(239,68,68,0.12)', fg: '#dc2626', label: 'Suspendido' },
 };
-
-export function UserStatusBadge({ status }: { status: string }) {
-  const s = STATUS_STYLES[status as UserStatus] ?? STATUS_STYLES.active;
-  return (
-    <span
-      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
-      style={{ background: s.bg, color: s.fg }}
-    >
-      {s.label}
-    </span>
-  );
-}
