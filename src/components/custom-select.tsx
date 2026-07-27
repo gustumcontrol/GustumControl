@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from '@/components/icon';
 
@@ -26,7 +26,7 @@ export function CustomSelect({
   invalid = false,
   triggerBackground,
   triggerColor,
-  placement = 'bottom',
+  placement,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -39,6 +39,7 @@ export function CustomSelect({
   invalid?: boolean;
   triggerBackground?: string;
   triggerColor?: string;
+  /** Si no se pasa, se detecta solo según el espacio disponible. */
   placement?: 'bottom' | 'top';
 }) {
   const [open, setOpen] = useState(false);
@@ -55,16 +56,38 @@ export function CustomSelect({
     const el = triggerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    if (placement === 'top') {
-      setPanelRect({ placement: 'top', bottom: window.innerHeight - r.top + 4, left: r.left, width: r.width });
-    } else {
-      setPanelRect({ placement: 'bottom', top: r.bottom + 4, left: r.left, width: r.width });
+    let openUp = placement === 'top';
+    if (placement === undefined) {
+      // Altura estimada del panel, para decidir hacia dónde abrir según el
+      // espacio real disponible, así no queda mal en páginas donde el
+      // trigger está cerca de un borde.
+      const estimatedHeight = Math.min(options.length, 6) * 36 + (searchable ? 56 : 0) + 16;
+      const spaceBelow = window.innerHeight - r.bottom;
+      const spaceAbove = r.top;
+      openUp = spaceBelow < estimatedHeight && spaceAbove > spaceBelow;
     }
+    const next: PanelRect = openUp
+      ? { placement: 'top', bottom: window.innerHeight - r.top + 4, left: r.left, width: r.width }
+      : { placement: 'bottom', top: r.bottom + 4, left: r.left, width: r.width };
+
+    // Evita setState si no cambió nada: si no, cada render dispara otro
+    // render (el layout effect corre en cada uno mientras está abierto) y
+    // queda un loop infinito.
+    setPanelRect((prev) => (prev && JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
   };
+
+  // Recalcula en cada render mientras está abierto (no solo al abrir): si
+  // el panel queda abierto y algo re-renderiza la página (por ejemplo un
+  // refresh de datos en tiempo real que cambia el alto de una tabla), el
+  // trigger se puede correr de lugar sin que haya scroll ni resize — sin
+  // esto, el panel se quedaba "pegado" a la posición vieja y se veía
+  // separado del botón.
+  useLayoutEffect(() => {
+    if (open) updatePanelRect();
+  });
 
   useEffect(() => {
     if (!open) return;
-    updatePanelRect();
     window.addEventListener('scroll', updatePanelRect, true);
     window.addEventListener('resize', updatePanelRect);
     return () => {

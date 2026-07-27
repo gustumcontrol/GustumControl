@@ -1,7 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import writeXlsxFile from 'write-excel-file/browser';
+import type { SheetData } from 'write-excel-file/browser';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +13,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
+import { Pagination } from '@/components/pagination';
+import { CustomSelect } from '@/components/custom-select';
+import { DatePicker } from '@/components/date-picker';
 
 export type CleaningLogRow = {
   id: string;
@@ -29,6 +35,7 @@ type CleaningSession = {
   finishedBy: string | null;
   durationMs: number | null;
   isComplete: boolean;
+  lastActivityAt: string;
 };
 
 function formatDuration(ms: number) {
@@ -37,6 +44,42 @@ function formatDuration(ms: number) {
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
   return rest > 0 ? `${hours} h ${rest} min` : `${hours} h`;
+}
+
+const EXPORT_COLUMNS = [
+  { header: 'Habitación', width: 12 },
+  { header: 'Iniciada', width: 20 },
+  { header: 'Finalizada', width: 20 },
+  { header: 'Duración', width: 14 },
+  { header: 'Realizada por', width: 18 },
+  { header: 'Estado', width: 14 },
+];
+
+async function exportSessionsToXlsx(sessions: CleaningSession[]) {
+  const headerRow: SheetData[number] = EXPORT_COLUMNS.map((c) => ({
+    value: c.header,
+    fontWeight: 'bold',
+    textColor: '#FF6B2B',
+    backgroundColor: '#FFEDE6',
+    align: 'left',
+  }));
+
+  const dataRows: SheetData = sessions.map((s) => [
+    { value: s.roomNumber },
+    s.startedAt
+      ? { value: new Date(s.startedAt), type: Date, format: 'dd/mm/yyyy hh:mm' }
+      : { value: '—' },
+    s.finishedAt
+      ? { value: new Date(s.finishedAt), type: Date, format: 'dd/mm/yyyy hh:mm' }
+      : { value: '—' },
+    { value: s.durationMs != null ? formatDuration(s.durationMs) : '—' },
+    { value: s.finishedBy ?? '—' },
+    { value: s.isComplete ? 'Completada' : 'En proceso' },
+  ]);
+
+  await writeXlsxFile([headerRow, ...dataRows], {
+    columns: EXPORT_COLUMNS.map((c) => ({ width: c.width })),
+  }).toFile(`historial-limpieza-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
 function groupSessions(entries: CleaningLogRow[]): CleaningSession[] {
@@ -65,12 +108,13 @@ function groupSessions(entries: CleaningLogRow[]): CleaningSession[] {
           ? new Date(finished.changed_at).getTime() - new Date(started.changed_at).getTime()
           : null,
       isComplete: !!finished,
+      lastActivityAt: sorted[sorted.length - 1].changed_at,
     });
   }
 
   return sessions.sort((a, b) => {
-    const aTime = a.entries[a.entries.length - 1].changed_at;
-    const bTime = b.entries[b.entries.length - 1].changed_at;
+    const aTime = a.lastActivityAt;
+    const bTime = b.lastActivityAt;
     return new Date(bTime).getTime() - new Date(aTime).getTime();
   });
 }
@@ -137,20 +181,43 @@ function SessionDetailDialog({
 export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
   useRealtimeRefresh(['cleaning_log']);
   const [query, setQuery] = useState('');
+  const [staffFilter, setStaffFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [selected, setSelected] = useState<CleaningSession | null>(null);
+  const [pageSize, setPageSize] = useState(20);
+  const [page, setPage] = useState(1);
+  const [isExporting, setIsExporting] = useState(false);
 
   const sessions = useMemo(() => groupSessions(entries), [entries]);
   const completedCount = sessions.filter((s) => s.isComplete).length;
 
+  const staffOptions = useMemo(() => {
+    const names = new Set<string>();
+    for (const e of entries) {
+      if (e.changed_by_name) names.add(e.changed_by_name);
+    }
+    return [...names].sort((a, b) => a.localeCompare(b)).map((name) => ({ value: name, label: name }));
+  }, [entries]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return sessions;
-    return sessions.filter(
-      (s) =>
+    return sessions.filter((s) => {
+      if (staffFilter && s.finishedBy !== staffFilter) return false;
+      const activityDate = s.lastActivityAt.slice(0, 10);
+      if (dateFrom && activityDate < dateFrom) return false;
+      if (dateTo && activityDate > dateTo) return false;
+      if (!q) return true;
+      return (
         s.roomNumber.toLowerCase().includes(q) ||
         (s.finishedBy ?? '').toLowerCase().includes(q)
-    );
-  }, [sessions, query]);
+      );
+    });
+  }, [sessions, query, staffFilter, dateFrom, dateTo]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="flex flex-col gap-4">
@@ -166,12 +233,95 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
         </p>
       </div>
 
-      <Input
-        placeholder="Buscar por habitación o quién lo hizo..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="max-w-sm"
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Input
+            placeholder="Buscar por habitación o quién lo hizo..."
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
+            className="shrink-0"
+            style={{ width: '24rem' }}
+          />
+          <Button
+            type="button"
+            onClick={() => {
+              setIsExporting(true);
+              exportSessionsToXlsx(filtered).finally(() => setIsExporting(false));
+            }}
+            disabled={filtered.length === 0 || isExporting}
+            style={{ background: 'rgba(29,111,66,0.12)', color: '#1D6F42' }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logoexcel.png" alt="" className="w-4 h-4" />
+            {isExporting ? 'Exportando...' : 'Exportar a Excel'}
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="w-52">
+            <CustomSelect
+              value={staffFilter}
+              onChange={(v) => {
+                setStaffFilter(v);
+                setPage(1);
+              }}
+              placeholder="Todo el personal"
+              searchable
+              searchPlaceholder="Buscar personal..."
+              options={[{ value: '', label: 'Todo el personal' }, ...staffOptions]}
+            />
+          </div>
+
+          <div
+            className="flex items-center gap-2 rounded-lg px-3 py-2"
+            style={{ background: 'var(--raised)' }}
+          >
+            <div className="w-40">
+              <DatePicker
+                value={dateFrom}
+                onChange={(v) => {
+                  setDateFrom(v);
+                  if (dateTo && v > dateTo) setDateTo('');
+                  setPage(1);
+                }}
+                placeholder="Desde"
+              />
+            </div>
+            <span className="text-sm" style={{ color: 'var(--text-3)' }}>
+              —
+            </span>
+            <div className="w-40">
+              <DatePicker
+                value={dateTo}
+                onChange={(v) => {
+                  setDateTo(v);
+                  setPage(1);
+                }}
+                placeholder="Hasta"
+                minDate={dateFrom}
+                align="right"
+              />
+            </div>
+            {(dateFrom || dateTo) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDateFrom('');
+                  setDateTo('');
+                  setPage(1);
+                }}
+                className="text-xs font-medium cursor-pointer shrink-0"
+                style={{ color: 'var(--accent-c)' }}
+              >
+                Quitar rango
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {filtered.length === 0 ? (
         <p className="text-sm text-center" style={{ color: 'var(--text-3)' }}>
@@ -199,7 +349,7 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((s) => (
+              {paginated.map((s) => (
                 <tr
                   key={s.reservationId}
                   onClick={() => setSelected(s)}
@@ -239,6 +389,17 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
           </table>
         </div>
       )}
+
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        totalItems={filtered.length}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+      />
 
       {selected && (
         <SessionDetailDialog

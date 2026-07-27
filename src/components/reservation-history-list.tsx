@@ -6,8 +6,7 @@ import type { SheetData } from 'write-excel-file/browser';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/date-picker';
-import { CustomSelect } from '@/components/custom-select';
-import { Icon } from '@/components/icon';
+import { Pagination } from '@/components/pagination';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import { updateReservationHistoryTicket } from '@/lib/actions/reservations';
 import type { ReservationHistory } from '@/lib/types';
@@ -16,12 +15,6 @@ const TYPE_FILTERS: { value: 'all' | 'Doble' | 'Triple'; label: string }[] = [
   { value: 'all', label: 'Todos' },
   { value: 'Doble', label: 'Doble' },
   { value: 'Triple', label: 'Triple' },
-];
-
-const PAGE_SIZE_OPTIONS = [
-  { value: '20', label: '20 por página' },
-  { value: '50', label: '50 por página' },
-  { value: '100', label: '100 por página' },
 ];
 
 const EXPORT_COLUMNS = [
@@ -120,8 +113,6 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
-  const pageStart = filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const pageEnd = Math.min(currentPage * pageSize, filtered.length);
   const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
@@ -317,89 +308,16 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
         </div>
       )}
 
-      {filtered.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-            {pageStart}–{pageEnd} de {filtered.length}
-          </p>
-
-          <div className="flex items-center gap-3">
-            <div className="w-40">
-              <CustomSelect
-                value={String(pageSize)}
-                onChange={(v) => {
-                  setPageSize(Number(v));
-                  setPage(1);
-                }}
-                size="sm"
-                placement="top"
-                options={PAGE_SIZE_OPTIONS}
-              />
-            </div>
-
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ color: 'var(--text-2)' }}
-              >
-                <Icon name="arrow-left" style="solid" size={11} color="var(--text-3)" />
-                Prev
-              </button>
-
-              {getPageWindow(currentPage, totalPages).map((p, i) =>
-                p === '…' ? (
-                  <span key={`ellipsis-${i}`} className="px-2 text-sm" style={{ color: 'var(--text-3)' }}>
-                    …
-                  </span>
-                ) : (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setPage(p)}
-                    className="min-w-8 h-8 px-2 rounded-md text-sm font-medium cursor-pointer transition-colors"
-                    style={{
-                      background: p === currentPage ? 'var(--accent-c)' : 'var(--raised)',
-                      color: p === currentPage ? 'var(--accent-ink)' : 'var(--text-2)',
-                    }}
-                  >
-                    {p}
-                  </button>
-                )
-              )}
-
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ color: 'var(--text-2)' }}
-              >
-                Next
-                <Icon name="arrow-right" style="solid" size={11} color="var(--text-3)" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        totalItems={filtered.length}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+      />
     </div>
   );
-}
-
-function getPageWindow(current: number, total: number): (number | '…')[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-
-  const pages = new Set<number>([1, total, current - 1, current, current + 1]);
-  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
-
-  const result: (number | '…')[] = [];
-  let prev = 0;
-  for (const p of sorted) {
-    if (prev && p - prev > 1) result.push('…');
-    result.push(p);
-    prev = p;
-  }
-  return result;
 }
