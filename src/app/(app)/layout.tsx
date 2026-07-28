@@ -2,26 +2,43 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { NavLinks } from '@/components/nav-links';
 import { Sidebar } from '@/components/sidebar';
-import type { Role } from '@/lib/types';
+import type { Role, NavCategory } from '@/lib/types';
 
-const NAV_BY_ROLE: Record<Role, { href: string; label: string; icon: string }[]> = {
-  admin: [
+const OPERACION: NavCategory = {
+  category: 'Operación',
+  items: [
     { href: '/dashboard', label: 'Habitaciones', icon: 'bed' },
     { href: '/reservas', label: 'Reservas', icon: 'clipboard-list' },
-    { href: '/historial', label: 'Historial', icon: 'clock-rotate-left' },
+    { href: '/historial', label: 'Historial de reservas', icon: 'clock-rotate-left' },
+  ],
+};
+
+const LIMPIEZA: NavCategory = {
+  category: 'Limpieza',
+  items: [
     { href: '/limpieza', label: 'Limpieza', icon: 'broom' },
+    { href: '/limpieza/historial', label: 'Historial', icon: 'clock-rotate-left' },
+  ],
+};
+
+const MANTENIMIENTO: NavCategory = {
+  category: 'Mantenimiento',
+  items: [
     { href: '/mantenimiento', label: 'Mantenimiento', icon: 'screwdriver-wrench' },
-    { href: '/usuarios', label: 'Usuarios', icon: 'users' },
+    { href: '/mantenimiento/historial', label: 'Historial', icon: 'clock-rotate-left' },
   ],
-  recepcion: [
-    { href: '/dashboard', label: 'Habitaciones', icon: 'bed' },
-    { href: '/reservas', label: 'Reservas', icon: 'clipboard-list' },
-    { href: '/historial', label: 'Historial', icon: 'clock-rotate-left' },
-  ],
-  limpieza: [{ href: '/limpieza', label: 'Limpieza', icon: 'broom' }],
-  mantenimiento: [
-    { href: '/mantenimiento', label: 'Mantenimiento', icon: 'screwdriver-wrench' },
-  ],
+};
+
+const ADMINISTRACION: NavCategory = {
+  category: 'Administración',
+  items: [{ href: '/usuarios', label: 'Usuarios', icon: 'users' }],
+};
+
+const NAV_BY_ROLE: Record<Role, NavCategory[]> = {
+  admin: [OPERACION, LIMPIEZA, MANTENIMIENTO, ADMINISTRACION],
+  recepcion: [OPERACION],
+  limpieza: [LIMPIEZA],
+  mantenimiento: [MANTENIMIENTO],
 };
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -83,7 +100,8 @@ export default async function AppLayout({
   }
 
   const role = (profile?.role as Role) ?? 'recepcion';
-  const nav = NAV_BY_ROLE[role] ?? [];
+  const navCategories = NAV_BY_ROLE[role] ?? [];
+  const navFlat = navCategories.flatMap((c) => c.items);
   const displayName = profile?.full_name ?? user.email ?? '';
   const initial = displayName.trim().charAt(0).toUpperCase();
 
@@ -155,7 +173,7 @@ export default async function AppLayout({
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
       <Sidebar
-        nav={nav}
+        categories={navCategories}
         userId={user.id}
         displayName={displayName}
         roleLabel={ROLE_LABEL[role]}
@@ -181,7 +199,7 @@ export default async function AppLayout({
             </form>
           </div>
           <nav className="flex items-center gap-1 px-4 pb-3 overflow-x-auto">
-            <NavLinks items={nav} variant="mobile" />
+            <NavLinks items={navFlat} variant="mobile" />
           </nav>
         </header>
 

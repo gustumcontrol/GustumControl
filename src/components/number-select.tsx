@@ -45,7 +45,7 @@ export function NumberSelect({
         onFocus={() => setOpen(true)}
         onChange={(e) => onChange(Number(e.target.value))}
         aria-invalid={invalid}
-        className="w-full rounded-lg border bg-transparent [padding:8px_16px] text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
+        className="w-full rounded-lg border bg-transparent [padding:10px_16px] text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
         style={{ borderColor: invalid ? '#dc2626' : 'var(--input)' }}
       />
 

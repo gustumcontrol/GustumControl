@@ -15,12 +15,20 @@ export function NavLinks({
 }) {
   const pathname = usePathname();
 
+  // Si dos ítems comparten prefijo (ej. /limpieza y /limpieza/historial),
+  // solo debe marcarse activo el más específico de los dos, no ambos.
+  const activeHref = items.reduce<string | null>((best, item) => {
+    const matches =
+      pathname === item.href || (item.href !== '/' && pathname.startsWith(`${item.href}/`));
+    if (!matches) return best;
+    if (!best || item.href.length > best.length) return item.href;
+    return best;
+  }, null);
+
   return (
     <>
       {items.map((item) => {
-        const active =
-          pathname === item.href ||
-          (item.href !== '/' && pathname.startsWith(`${item.href}/`));
+        const active = item.href === activeHref;
 
         if (variant === 'sidebar') {
           return (

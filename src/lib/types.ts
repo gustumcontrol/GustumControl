@@ -69,6 +69,67 @@ export type Database = {
           },
         ];
       };
+      maintenance_issues: {
+        Row: {
+          id: string;
+          room_id: string;
+          description: string;
+          photo_url: string | null;
+          status: string;
+          opened_by: string | null;
+          opened_at: string;
+          started_at: string | null;
+          closed_by: string | null;
+          closed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          room_id: string;
+          description: string;
+          photo_url?: string | null;
+          status?: string;
+          opened_by?: string | null;
+          opened_at?: string;
+          started_at?: string | null;
+          closed_by?: string | null;
+          closed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          room_id?: string;
+          description?: string;
+          photo_url?: string | null;
+          status?: string;
+          opened_by?: string | null;
+          opened_at?: string;
+          started_at?: string | null;
+          closed_by?: string | null;
+          closed_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_issues_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "maintenance_issues_opened_by_fkey";
+            columns: ["opened_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "maintenance_issues_closed_by_fkey";
+            columns: ["closed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       notifications: {
         Row: {
           created_at: string;
@@ -366,7 +427,8 @@ export type Database = {
           computed_status: string | null;
           floor: string | null;
           guest_name: string | null;
-          maintenance_status: string | null;
+          maintenance_issue_id: string | null;
+          maintenance_description: string | null;
           number: string | null;
           reservation_id: string | null;
           room_id: string | null;
@@ -392,8 +454,12 @@ export type Database = {
         Args: { p_reservation_id: string; p_status: string };
         Returns: undefined;
       };
-      update_maintenance_status: {
-        Args: { p_reservation_id: string; p_status: string };
+      open_maintenance_issue: {
+        Args: { p_room_id: string; p_description: string; p_photo_url?: string | null };
+        Returns: string;
+      };
+      update_maintenance_issue_status: {
+        Args: { p_issue_id: string; p_status: string };
         Returns: undefined;
       };
     };
@@ -412,10 +478,13 @@ export type Reservation = Database["public"]["Tables"]["reservations"]["Row"];
 export type ReservationHistory =
   Database["public"]["Tables"]["reservation_history"]["Row"];
 export type CleaningLogEntry = Database["public"]["Tables"]["cleaning_log"]["Row"];
+export type MaintenanceIssue = Database["public"]["Tables"]["maintenance_issues"]["Row"];
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 export type RoomStatus = Database["public"]["Views"]["room_status"]["Row"];
 
 export type Role = "recepcion" | "limpieza" | "mantenimiento" | "admin";
+export type NavItem = { href: string; label: string; icon: string };
+export type NavCategory = { category: string; items: NavItem[] };
 export type UserStatus = "active" | "inactive" | "suspended";
 export type CleaningStatus = "NO" | "PENDIENTE" | "EN PROCESO" | "LIMPIADO";
 export type MaintenanceStatus = "NO" | "PENDIENTE" | "EN PROCESO" | "REALIZADO";

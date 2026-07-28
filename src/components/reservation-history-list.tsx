@@ -127,7 +127,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
               setPage(1);
             }}
             className="shrink-0"
-            style={{ width: '24rem' }}
+            style={{ width: '24rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
           />
           <Button
             type="button"
@@ -145,7 +145,10 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1">
+          <div
+            className="flex items-center gap-1 rounded-lg p-1"
+            style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
+          >
             {TYPE_FILTERS.map((f) => (
               <button
                 key={f.value}
@@ -178,6 +181,8 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
                   setPage(1);
                 }}
                 placeholder="Desde"
+                triggerBackground="var(--card-c)"
+                triggerBorderColor="var(--line)"
               />
             </div>
             <span className="text-sm" style={{ color: 'var(--text-3)' }}>
@@ -193,6 +198,8 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
                 placeholder="Hasta"
                 minDate={dateFrom}
                 align="right"
+                triggerBackground="var(--card-c)"
+                triggerBorderColor="var(--line)"
               />
             </div>
             {(dateFrom || dateTo) && (
@@ -251,7 +258,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
                     <th
                       key={h}
                       className="text-left font-medium px-4 py-3"
-                      style={{ color: 'var(--text-3)' }}
+                      style={{ color: 'var(--text-2)' }}
                     >
                       {h}
                     </th>

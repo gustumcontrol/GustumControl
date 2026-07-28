@@ -26,6 +26,7 @@ export function CustomSelect({
   invalid = false,
   triggerBackground,
   triggerColor,
+  triggerBorderColor,
   placement,
 }: {
   value: string;
@@ -39,6 +40,7 @@ export function CustomSelect({
   invalid?: boolean;
   triggerBackground?: string;
   triggerColor?: string;
+  triggerBorderColor?: string;
   /** Si no se pasa, se detecta solo según el espacio disponible. */
   placement?: 'bottom' | 'top';
 }) {
@@ -128,7 +130,7 @@ export function CustomSelect({
     setQuery('');
   };
 
-  const triggerPadding = size === 'sm' ? '6px 12px' : '8px 16px';
+  const triggerPadding = size === 'sm' ? '6px 12px' : '10px 16px';
   const triggerText = size === 'sm' ? 'text-xs' : 'text-sm';
 
   return (
@@ -141,7 +143,9 @@ export function CustomSelect({
         className={`flex w-full items-center gap-2 rounded-lg border outline-none cursor-pointer transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 ${triggerText}`}
         style={{
           padding: triggerPadding,
-          borderColor: invalid ? '#dc2626' : triggerBackground ? 'transparent' : 'var(--input)',
+          borderColor: invalid
+            ? '#dc2626'
+            : (triggerBorderColor ?? (triggerBackground ? 'transparent' : 'var(--input)')),
           background: triggerBackground ?? 'transparent',
         }}
       >

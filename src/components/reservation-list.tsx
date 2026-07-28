@@ -288,6 +288,7 @@ export function ReservationList({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="max-w-sm"
+        style={{ background: '#FFFFFF', border: '1px solid var(--line)' }}
       />
 
       {filtered.length === 0 ? (

@@ -35,6 +35,8 @@ export function DatePicker({
   id,
   minDate,
   align = 'left',
+  triggerBackground,
+  triggerBorderColor,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -43,6 +45,8 @@ export function DatePicker({
   id?: string;
   minDate?: string;
   align?: 'left' | 'right';
+  triggerBackground?: string;
+  triggerBorderColor?: string;
 }) {
   const selectedDate = parseISODate(value);
   const minDateObj = parseISODate(minDate ?? '');
@@ -102,8 +106,11 @@ export function DatePicker({
         id={id}
         type="button"
         onClick={toggleOpen}
-        className="flex w-full items-center gap-2 rounded-lg border bg-transparent [padding:8px_16px] text-sm outline-none cursor-pointer transition-colors focus-visible:ring-3 focus-visible:ring-ring/50"
-        style={{ borderColor: invalid ? '#dc2626' : 'var(--input)' }}
+        className="flex w-full items-center gap-2 rounded-lg border [padding:10px_16px] text-sm outline-none cursor-pointer transition-colors focus-visible:ring-3 focus-visible:ring-ring/50"
+        style={{
+          borderColor: invalid ? '#dc2626' : (triggerBorderColor ?? 'var(--input)'),
+          background: triggerBackground ?? 'transparent',
+        }}
       >
         <Icon name="calendar" style="regular" size={13} color="var(--text-3)" />
         <span

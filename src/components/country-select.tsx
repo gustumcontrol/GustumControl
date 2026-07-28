@@ -101,7 +101,7 @@ export function CountrySelect({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2 rounded-lg border bg-transparent [padding:8px_16px] text-sm outline-none cursor-pointer focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex w-full items-center gap-2 rounded-lg border bg-transparent [padding:10px_16px] text-sm outline-none cursor-pointer focus-visible:ring-3 focus-visible:ring-ring/50"
         style={{ borderColor: invalid ? '#dc2626' : 'var(--input)' }}
       >
         {selected ? (

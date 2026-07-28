@@ -243,7 +243,7 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
               setPage(1);
             }}
             className="shrink-0"
-            style={{ width: '24rem' }}
+            style={{ width: '24rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
           />
           <Button
             type="button"
@@ -271,6 +271,8 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
               placeholder="Todo el personal"
               searchable
               searchPlaceholder="Buscar personal..."
+              triggerBackground="#FFFFFF"
+              triggerBorderColor="var(--line)"
               options={[{ value: '', label: 'Todo el personal' }, ...staffOptions]}
             />
           </div>
@@ -288,6 +290,8 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
                   setPage(1);
                 }}
                 placeholder="Desde"
+                triggerBackground="var(--card-c)"
+                triggerBorderColor="var(--line)"
               />
             </div>
             <span className="text-sm" style={{ color: 'var(--text-3)' }}>
@@ -303,6 +307,8 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
                 placeholder="Hasta"
                 minDate={dateFrom}
                 align="right"
+                triggerBackground="var(--card-c)"
+                triggerBorderColor="var(--line)"
               />
             </div>
             {(dateFrom || dateTo) && (
@@ -340,7 +346,7 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
                     <th
                       key={h}
                       className="text-left font-medium px-4 py-3"
-                      style={{ color: 'var(--text-3)' }}
+                      style={{ color: 'var(--text-2)' }}
                     >
                       {h}
                     </th>

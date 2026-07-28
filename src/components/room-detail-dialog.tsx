@@ -68,6 +68,20 @@ export function RoomDetailDialog({
           <p className="text-sm" style={{ color: 'var(--text-2)' }}>
             Esta habitación está libre y lista para una nueva reserva.
           </p>
+        ) : status === 'MANTENIMIENTO' ? (
+          <div className="flex flex-col gap-2 text-sm" style={{ color: 'var(--text-2)' }}>
+            <p>
+              Esta habitación está bloqueada por una incidencia de mantenimiento sin resolver.
+            </p>
+            {room.maintenance_description && (
+              <div
+                className="rounded-lg px-3 py-2"
+                style={{ background: 'var(--raised)', color: 'var(--text-2)' }}
+              >
+                {room.maintenance_description}
+              </div>
+            )}
+          </div>
         ) : (
           <div className="flex flex-col gap-2 text-sm" style={{ color: 'var(--text-2)' }}>
             {isFuture && (
@@ -87,19 +101,11 @@ export function RoomDetailDialog({
               <span style={{ color: 'var(--text-3)' }}>Salida</span>
               <span>{room.check_out}</span>
             </div>
-            {!isFuture && (
-              <>
-                {room.cleaning_status && room.cleaning_status !== 'NO' && (
-                  <div className="flex justify-between">
-                    <span style={{ color: 'var(--text-3)' }}>Limpieza</span>
-                    <span>{room.cleaning_status}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span style={{ color: 'var(--text-3)' }}>Mantenimiento</span>
-                  <span>{room.maintenance_status}</span>
-                </div>
-              </>
+            {!isFuture && room.cleaning_status && room.cleaning_status !== 'NO' && (
+              <div className="flex justify-between">
+                <span style={{ color: 'var(--text-3)' }}>Limpieza</span>
+                <span>{room.cleaning_status}</span>
+              </div>
             )}
           </div>
         )}
@@ -111,11 +117,17 @@ export function RoomDetailDialog({
             <Link href={`/reservas/nueva?room=${room.room_id}`} className="w-full sm:w-auto">
               <Button className="w-full">Crear reserva para hoy</Button>
             </Link>
-          ) : (
+          ) : status === 'MANTENIMIENTO' ? (
+            <Link href="/mantenimiento" className="w-full sm:w-auto">
+              <Button variant="outline" className="w-full">
+                Ver en Mantenimiento
+              </Button>
+            </Link>
+          ) : room.reservation_id ? (
             <Button variant="outline" onClick={handleClose} disabled={isPending}>
               {isPending ? 'Cerrando...' : 'Cerrar reserva'}
             </Button>
-          )}
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -103,9 +103,12 @@ export function UsersTable({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="shrink-0"
-          style={{ width: '28rem' }}
+          style={{ width: '28rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
         />
-        <div className="flex items-center gap-1">
+        <div
+          className="flex items-center gap-1 rounded-lg p-1"
+          style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
+        >
           {FILTERS.map((f) => (
             <button
               key={f.value}
@@ -140,7 +143,7 @@ export function UsersTable({
                     <th
                       key={h}
                       className="text-left font-medium px-4 py-3"
-                      style={{ color: 'var(--text-3)' }}
+                      style={{ color: 'var(--text-2)' }}
                     >
                       {h}
                     </th>

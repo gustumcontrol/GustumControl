@@ -4,17 +4,18 @@ import { useEffect, useState } from 'react';
 import { NavLinks } from '@/components/nav-links';
 import { NotificationsBell } from '@/components/notifications-bell';
 import { Icon } from '@/components/icon';
+import type { NavCategory } from '@/lib/types';
 
 const STORAGE_KEY = 'sidebar-collapsed';
 
 export function Sidebar({
-  nav,
+  categories,
   userId,
   displayName,
   roleLabel,
   initial,
 }: {
-  nav: { href: string; label: string; icon: string }[];
+  categories: NavCategory[];
   userId: string;
   displayName: string;
   roleLabel: string;
@@ -75,8 +76,20 @@ export function Sidebar({
         </button>
       </div>
 
-      <nav className="flex-1 px-3 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
-        <NavLinks items={nav} variant="sidebar" collapsed={collapsed} />
+      <nav className="flex-1 px-3 flex flex-col gap-4 overflow-y-auto overflow-x-hidden">
+        {categories.map((cat) => (
+          <div key={cat.category} className="flex flex-col gap-1">
+            {!collapsed && (
+              <p
+                className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--text-3)' }}
+              >
+                {cat.category}
+              </p>
+            )}
+            <NavLinks items={cat.items} variant="sidebar" collapsed={collapsed} />
+          </div>
+        ))}
       </nav>
 
       <NotificationsBell userId={userId} collapsed={collapsed} />

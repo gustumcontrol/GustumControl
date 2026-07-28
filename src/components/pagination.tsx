@@ -58,6 +58,8 @@ export function Pagination({
             onChange={(v) => onPageSizeChange(Number(v))}
             size="sm"
             placement="top"
+            triggerBackground="#FFFFFF"
+            triggerBorderColor="var(--line)"
             options={PAGE_SIZE_OPTIONS}
           />
         </div>

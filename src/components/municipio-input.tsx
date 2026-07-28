@@ -52,7 +52,7 @@ export function MunicipioInput({
   return (
     <div className="relative" ref={containerRef}>
       <div
-        className="flex w-full items-center gap-2 rounded-lg border bg-transparent [padding:8px_16px] transition-colors focus-within:ring-3 focus-within:ring-ring/50"
+        className="flex w-full items-center gap-2 rounded-lg border bg-transparent [padding:10px_16px] transition-colors focus-within:ring-3 focus-within:ring-ring/50"
         style={{ borderColor: invalid ? '#dc2626' : 'var(--input)' }}
       >
         <input

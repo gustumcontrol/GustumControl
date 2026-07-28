@@ -4,13 +4,34 @@ import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { MaintenanceStatus } from '@/lib/types';
 
-export async function updateMaintenanceStatus(
-  reservationId: string,
-  status: MaintenanceStatus
+export async function openMaintenanceIssue(
+  roomId: string,
+  description: string,
+  photoUrl?: string
 ) {
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.rpc('update_maintenance_status', {
-    p_reservation_id: reservationId,
+  const { error } = await supabase.rpc('open_maintenance_issue', {
+    p_room_id: roomId,
+    p_description: description,
+    p_photo_url: photoUrl || null,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath('/mantenimiento');
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+export async function updateMaintenanceIssueStatus(
+  issueId: string,
+  status: Exclude<MaintenanceStatus, 'NO'>
+) {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc('update_maintenance_issue_status', {
+    p_issue_id: issueId,
     p_status: status,
   });
 
@@ -19,6 +40,7 @@ export async function updateMaintenanceStatus(
   }
 
   revalidatePath('/mantenimiento');
+  revalidatePath('/mantenimiento/historial');
   revalidatePath('/dashboard');
   return { success: true };
 }

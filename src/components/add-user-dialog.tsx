@@ -85,7 +85,7 @@ export function AddUserDialog() {
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="new-firstName">Nombre</Label>
