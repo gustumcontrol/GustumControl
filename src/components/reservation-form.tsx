@@ -18,6 +18,8 @@ import type { RoomStatus } from '@/lib/types';
 type RoomTypePrice = { name: string; price_per_night: number };
 type BoardPlanPrice = { name: string; price_per_person: number };
 
+const DOBLE_INDIVIDUAL_PRICE = 47;
+
 type FieldErrors = Partial<
   Record<
     | 'roomId'
@@ -64,6 +66,7 @@ export function ReservationForm({
   const [checkIn, setCheckIn] = useState(() => new Date().toISOString().slice(0, 10));
   const [nights, setNights] = useState(1);
   const [boardPlan, setBoardPlan] = useState('');
+  const [dobleOccupancy, setDobleOccupancy] = useState<'doble' | 'individual'>('doble');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState('');
@@ -84,7 +87,12 @@ export function ReservationForm({
   );
 
   const selectedRoom = rooms.find((r) => r.room_id === roomId);
-  const basePrice = selectedRoom?.type ? priceByType.get(selectedRoom.type) ?? 0 : 0;
+  const isDoble = selectedRoom?.type === 'Doble';
+  const basePrice = !selectedRoom?.type
+    ? 0
+    : isDoble && dobleOccupancy === 'individual'
+      ? DOBLE_INDIVIDUAL_PRICE
+      : priceByType.get(selectedRoom.type) ?? 0;
   const price = boardPlan
     ? (boardPriceByName.get(boardPlan) ?? 0) * (Number(guestsCount) || 0)
     : basePrice;
@@ -113,6 +121,7 @@ export function ReservationForm({
 
   const handleRoomChange = (id: string) => {
     setRoomId(id);
+    setDobleOccupancy('doble');
     if (id) clearFieldError('roomId');
   };
 
@@ -348,17 +357,30 @@ export function ReservationForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="price">Precio por noche</Label>
-          <Input
-            id="price"
-            value={selectedRoom ? `$${price}` : '—'}
-            disabled
-            readOnly
-            style={{ background: 'var(--raised)' }}
-          />
+          {isDoble && !boardPlan ? (
+            <CustomSelect
+              value={dobleOccupancy}
+              onChange={(v) => setDobleOccupancy(v as 'doble' | 'individual')}
+              options={[
+                { value: 'doble', label: `Doble — $${priceByType.get('Doble') ?? 0}` },
+                { value: 'individual', label: `Individual — $${DOBLE_INDIVIDUAL_PRICE}` },
+              ]}
+            />
+          ) : (
+            <Input
+              id="price"
+              value={selectedRoom ? `$${price}` : '—'}
+              disabled
+              readOnly
+              style={{ background: 'var(--raised)' }}
+            />
+          )}
           <p className="text-xs" style={{ color: 'var(--text-3)' }}>
             {boardPlan
               ? `$${boardPriceByName.get(boardPlan) ?? 0} x ${guestsCount} persona${guestsCount === 1 ? '' : 's'}.`
-              : 'Fijo según el tipo de habitación.'}
+              : isDoble
+                ? 'Doble: precio completo de la habitación. Individual: una sola persona.'
+                : 'Fijo según el tipo de habitación.'}
           </p>
         </div>
         <div className="flex flex-col gap-1.5">
