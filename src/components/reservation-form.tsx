@@ -13,12 +13,11 @@ import { DatePicker } from '@/components/date-picker';
 import { MunicipioInput } from '@/components/municipio-input';
 import { createReservation } from '@/lib/actions/reservations';
 import { PROVINCES_BY_COUNTRY } from '@/lib/provinces';
+import { DOBLE_INDIVIDUAL_PRICE } from '@/lib/pricing';
 import type { RoomStatus } from '@/lib/types';
 
 type RoomTypePrice = { name: string; price_per_night: number };
 type BoardPlanPrice = { name: string; price_per_person: number };
-
-const DOBLE_INDIVIDUAL_PRICE = 47;
 
 type FieldErrors = Partial<
   Record<

@@ -321,13 +321,21 @@ export function ReservationList({
 
   return (
     <div className="flex flex-col gap-4">
-      <Input
-        placeholder="Buscar por huésped o habitación..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="max-w-sm"
-        style={{ background: '#FFFFFF', border: '1px solid var(--line)' }}
-      />
+      <div className="relative max-w-sm">
+        <Icon
+          name="magnifying-glass"
+          style="regular"
+          size={14}
+          color="var(--text-3)"
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+        />
+        <Input
+          placeholder="Buscar por huésped o habitación..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          style={{ background: '#FFFFFF', border: '1px solid var(--line)', paddingLeft: '2.25rem' }}
+        />
+      </div>
 
       {filtered.length === 0 ? (
         <p className="text-sm text-center" style={{ color: 'var(--text-3)' }}>

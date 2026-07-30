@@ -31,7 +31,10 @@ const MANTENIMIENTO: NavCategory = {
 
 const ADMINISTRACION: NavCategory = {
   category: 'Administración',
-  items: [{ href: '/usuarios', label: 'Usuarios', icon: 'users' }],
+  items: [
+    { href: '/analiticas', label: 'Analíticas', icon: 'chart-line' },
+    { href: '/usuarios', label: 'Usuarios', icon: 'users' },
+  ],
 };
 
 const NAV_BY_ROLE: Record<Role, NavCategory[]> = {

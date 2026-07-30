@@ -21,6 +21,7 @@ import { DatePicker } from '@/components/date-picker';
 import { MunicipioInput } from '@/components/municipio-input';
 import { updateReservation } from '@/lib/actions/reservations';
 import { PROVINCES_BY_COUNTRY } from '@/lib/provinces';
+import { DOBLE_INDIVIDUAL_PRICE } from '@/lib/pricing';
 import type { ReservationRow } from '@/components/reservation-list';
 
 type RoomTypePrice = { name: string; price_per_night: number };
@@ -41,6 +42,11 @@ export function EditReservationDialog({
   const [checkIn, setCheckIn] = useState(reservation.check_in);
   const [nights, setNights] = useState(reservation.nights);
   const [boardPlan, setBoardPlan] = useState(reservation.board_plan ?? '');
+  const [dobleOccupancy, setDobleOccupancy] = useState<'doble' | 'individual'>(
+    reservation.room?.type === 'Doble' && reservation.price_per_night === DOBLE_INDIVIDUAL_PRICE
+      ? 'individual'
+      : 'doble'
+  );
   const [paymentMethod, setPaymentMethod] = useState(reservation.payment_method ?? '');
   const [phone, setPhone] = useState(reservation.phone ?? '');
   const [country, setCountry] = useState(reservation.country ?? '');
@@ -58,7 +64,12 @@ export function EditReservationDialog({
     [boardPlans]
   );
 
-  const basePrice = reservation.room?.type ? priceByType.get(reservation.room.type) ?? 0 : 0;
+  const isDoble = reservation.room?.type === 'Doble';
+  const basePrice = !reservation.room?.type
+    ? 0
+    : isDoble && dobleOccupancy === 'individual'
+      ? DOBLE_INDIVIDUAL_PRICE
+      : priceByType.get(reservation.room.type) ?? 0;
   const price = boardPlan
     ? (boardPriceByName.get(boardPlan) ?? 0) * (Number(guestsCount) || 0)
     : basePrice;
@@ -82,6 +93,11 @@ export function EditReservationDialog({
     setCheckIn(reservation.check_in);
     setNights(reservation.nights);
     setBoardPlan(reservation.board_plan ?? '');
+    setDobleOccupancy(
+      reservation.room?.type === 'Doble' && reservation.price_per_night === DOBLE_INDIVIDUAL_PRICE
+        ? 'individual'
+        : 'doble'
+    );
     setPaymentMethod(reservation.payment_method ?? '');
     setPhone(reservation.phone ?? '');
     setCountry(reservation.country ?? '');
@@ -243,17 +259,34 @@ export function EditReservationDialog({
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label>Método de pago</Label>
-            <CustomSelect
-              value={paymentMethod}
-              onChange={setPaymentMethod}
-              placeholder="Selecciona un método"
-              options={[
-                { value: 'Efectivo', label: 'Efectivo' },
-                { value: 'Tarjeta', label: 'Tarjeta' },
-              ]}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edit-price">Precio por noche</Label>
+              {isDoble && !boardPlan ? (
+                <CustomSelect
+                  value={dobleOccupancy}
+                  onChange={(v) => setDobleOccupancy(v as 'doble' | 'individual')}
+                  options={[
+                    { value: 'doble', label: `Doble — $${priceByType.get('Doble') ?? 0}` },
+                    { value: 'individual', label: `Individual — $${DOBLE_INDIVIDUAL_PRICE}` },
+                  ]}
+                />
+              ) : (
+                <Input id="edit-price" value={`$${price}`} disabled readOnly />
+              )}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Método de pago</Label>
+              <CustomSelect
+                value={paymentMethod}
+                onChange={setPaymentMethod}
+                placeholder="Selecciona un método"
+                options={[
+                  { value: 'Efectivo', label: 'Efectivo' },
+                  { value: 'Tarjeta', label: 'Tarjeta' },
+                ]}
+              />
+            </div>
           </div>
 
           <div

@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { Input } from '@/components/ui/input';
+import { Icon } from '@/components/icon';
 import { Button } from '@/components/ui/button';
 import { CustomSelect } from '@/components/custom-select';
 import { RoleBadge, STATUS_STYLES } from '@/components/user-badges';
@@ -98,13 +99,25 @@ export function UsersTable({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Input
-          placeholder="Buscar por nombre, email o departamento..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="shrink-0"
-          style={{ maxWidth: '28rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
-        />
+        <div className="relative shrink-0" style={{ maxWidth: '28rem', width: '100%' }}>
+          <Icon
+            name="magnifying-glass"
+            style="regular"
+            size={14}
+            color="var(--text-3)"
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+          />
+          <Input
+            placeholder="Buscar por nombre, email o departamento..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{
+              background: '#FFFFFF',
+              border: '1px solid var(--line)',
+              paddingLeft: '2.25rem',
+            }}
+          />
+        </div>
         <div
           className="flex items-center gap-1 rounded-lg p-1 max-w-full overflow-x-auto"
           style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}

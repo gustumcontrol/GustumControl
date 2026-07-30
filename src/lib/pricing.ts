@@ -1,0 +1,1 @@
+export const DOBLE_INDIVIDUAL_PRICE = 47;

@@ -5,6 +5,7 @@ import writeXlsxFile from 'write-excel-file/browser';
 import type { SheetData } from 'write-excel-file/browser';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/icon';
 import {
   Dialog,
   DialogContent,
@@ -235,16 +236,28 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Input
-            placeholder="Buscar por habitación o quién lo hizo..."
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
-            className="shrink-0"
-            style={{ maxWidth: '24rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
-          />
+          <div className="relative shrink-0" style={{ maxWidth: '24rem', width: '100%' }}>
+            <Icon
+              name="magnifying-glass"
+              style="regular"
+              size={14}
+              color="var(--text-3)"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            />
+            <Input
+              placeholder="Buscar por habitación o quién lo hizo..."
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1);
+              }}
+              style={{
+                background: '#FFFFFF',
+                border: '1px solid var(--line)',
+                paddingLeft: '2.25rem',
+              }}
+            />
+          </div>
           <Button
             type="button"
             onClick={() => {
