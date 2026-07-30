@@ -161,7 +161,7 @@ export function NotificationsBell({
 
       {open && (
         <div
-          className={`absolute bottom-full mb-2 w-80 max-h-[28rem] rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden origin-bottom ${collapsed ? 'left-full ml-2' : 'left-3 right-3'}`}
+          className={`absolute bottom-full mb-2 w-80 max-h-[28rem] rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden origin-bottom ${collapsed ? 'left-full ml-2' : 'left-3 right-3'}`}
           style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
         >
           <div
@@ -196,7 +196,7 @@ export function NotificationsBell({
                       key={n.id}
                       type="button"
                       onClick={() => (clickable ? handleNotificationClick(n) : markRead(n.id))}
-                      className="w-full text-left px-3 py-2.5 flex gap-3 rounded-md cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-2.5 flex gap-3 rounded-lg cursor-pointer transition-colors"
                       style={{ background: isUnread ? 'var(--accent-dim)' : 'transparent' }}
                     >
                       <div

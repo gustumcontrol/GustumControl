@@ -51,7 +51,7 @@ export function NumberSelect({
 
       {open && (
         <div
-          className="absolute left-0 right-0 top-full mt-1 rounded-xl shadow-lg z-30 max-h-56 overflow-y-auto p-1.5"
+          className="absolute left-0 right-0 top-full mt-1 rounded-lg shadow-lg z-30 max-h-56 overflow-y-auto p-1.5"
           style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
         >
           {options.map((n) => {
@@ -64,7 +64,7 @@ export function NumberSelect({
                   onChange(n);
                   setOpen(false);
                 }}
-                className="w-full flex items-center px-3 py-2 rounded-md text-sm text-left cursor-pointer transition-colors"
+                className="w-full flex items-center px-3 py-2 rounded-lg text-sm text-left cursor-pointer transition-colors"
                 style={{
                   background: isSelected ? 'var(--accent-dim)' : 'transparent',
                   color: isSelected ? 'var(--accent-c)' : 'var(--text-2)',

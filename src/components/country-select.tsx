@@ -7,7 +7,7 @@ import { COUNTRIES, POPULAR_COUNTRY_CODES, type Country } from '@/lib/countries'
 function Flag({ code, size = 18 }: { code: string; size?: number }) {
   return (
     <span
-      className="inline-block rounded-sm overflow-hidden shrink-0"
+      className="inline-block rounded-lg overflow-hidden shrink-0"
       style={{ width: size, height: size }}
     >
       <span
@@ -37,7 +37,7 @@ function CountryRow({
     <button
       type="button"
       onClick={() => onSelect(country)}
-      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-left cursor-pointer transition-colors"
+      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left cursor-pointer transition-colors"
       style={{
         background: selected ? 'var(--accent-dim)' : 'transparent',
         color: selected ? 'var(--accent-c)' : 'var(--text-2)',
@@ -119,7 +119,7 @@ export function CountrySelect({
 
       {open && (
         <div
-          className="absolute left-0 right-0 top-full mt-1 rounded-xl shadow-lg z-30 flex flex-col overflow-hidden"
+          className="absolute left-0 right-0 top-full mt-1 rounded-lg shadow-lg z-30 flex flex-col overflow-hidden"
           style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
         >
           <div className="p-2" style={{ borderBottom: '1px solid var(--line)' }}>
@@ -128,7 +128,7 @@ export function CountrySelect({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar país..."
-              className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring"
+              className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring"
             />
           </div>
           <div className="max-h-64 overflow-y-auto p-1.5">

@@ -131,7 +131,7 @@ function ReservationCard({
 
   return (
     <div
-      className="rounded-xl overflow-hidden transition-colors"
+      className="rounded-lg overflow-hidden transition-colors"
       style={{
         background: 'var(--card-c)',
         border: `1px solid ${expanded ? 'var(--accent-c)' : 'var(--line)'}`,
@@ -144,18 +144,38 @@ function ReservationCard({
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') setExpanded((v) => !v);
         }}
-        className="flex items-center gap-4 p-4 cursor-pointer select-none"
+        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 cursor-pointer select-none"
       >
-        <div className="w-44 shrink-0">
-          <p className="font-semibold text-sm truncate" style={{ color: 'var(--light)' }}>
-            {r.guest_name}
-          </p>
-          <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
-            {roomLine}
-          </p>
+        <div className="flex items-center justify-between gap-3 sm:w-44 sm:shrink-0">
+          <div className="min-w-0">
+            <p className="font-semibold text-sm truncate" style={{ color: 'var(--light)' }}>
+              {r.guest_name}
+            </p>
+            <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
+              {roomLine}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded((v) => !v);
+            }}
+            className="sm:hidden w-8 h-8 rounded-lg flex items-center justify-center shrink-0 cursor-pointer transition-colors hover:bg-[var(--raised)]"
+            style={{ border: '1px solid var(--line)' }}
+            aria-label={expanded ? 'Contraer' : 'Expandir'}
+          >
+            <span
+              className="inline-flex transition-transform duration-300 ease-in-out"
+              style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            >
+              <Icon name="chevron-down" style="solid" size={11} color="var(--text-2)" />
+            </span>
+          </button>
         </div>
 
-        <div className="flex-1 grid grid-cols-4 items-center gap-4 min-w-0">
+        <div className="flex flex-col gap-3 sm:flex-1 sm:grid sm:grid-cols-4 sm:items-center sm:gap-4 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             <div>
               <p
@@ -182,16 +202,34 @@ function ReservationCard({
             </div>
           </div>
 
-          <p className="text-sm font-semibold text-center" style={{ color: 'var(--light)' }}>
-            {r.nights}
-          </p>
+          <div className="flex items-center justify-between gap-3 sm:contents">
+            <div className="sm:text-center">
+              <p
+                className="text-[10px] font-medium uppercase tracking-wide leading-none mb-1 sm:hidden"
+                style={{ color: 'var(--text-3)' }}
+              >
+                Noches
+              </p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--light)' }}>
+                {r.nights}
+              </p>
+            </div>
 
-          <p className="text-sm font-semibold text-center" style={{ color: 'var(--light)' }}>
-            {r.total != null ? `$${r.total}` : '—'}
-          </p>
+            <div className="sm:text-center">
+              <p
+                className="text-[10px] font-medium uppercase tracking-wide leading-none mb-1 sm:hidden"
+                style={{ color: 'var(--text-3)' }}
+              >
+                Total
+              </p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--light)' }}>
+                {r.total != null ? `$${r.total}` : '—'}
+              </p>
+            </div>
 
-          <div className="flex justify-end">
-            <StatusPill status={status} />
+            <div className="flex sm:justify-end">
+              <StatusPill status={status} />
+            </div>
           </div>
         </div>
 
@@ -201,7 +239,7 @@ function ReservationCard({
             e.stopPropagation();
             setExpanded((v) => !v);
           }}
-          className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 cursor-pointer transition-colors hover:bg-[var(--raised)]"
+          className="hidden sm:flex w-8 h-8 rounded-lg items-center justify-center shrink-0 cursor-pointer transition-colors hover:bg-[var(--raised)]"
           style={{ border: '1px solid var(--line)' }}
           aria-label={expanded ? 'Contraer' : 'Expandir'}
         >
@@ -297,7 +335,7 @@ export function ReservationList({
         </p>
       ) : (
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-4 px-4">
+          <div className="hidden sm:flex items-center gap-4 px-4">
             <div className="w-44 shrink-0">
               <span
                 className="text-sm font-medium"

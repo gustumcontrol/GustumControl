@@ -2,10 +2,22 @@ import type { ComputedRoomStatus } from '@/lib/types';
 
 export const STATUS_STYLES: Record<ComputedRoomStatus, { bg: string; fg: string; label: string }> = {
   LIBRE: { bg: 'rgba(34,197,94,0.12)', fg: '#16a34a', label: 'Libre' },
-  OCUPADA: { bg: 'rgba(239,68,68,0.12)', fg: '#dc2626', label: 'Ocupada' },
+  OCUPADA: { bg: 'rgb(255 107 43 / 12%)', fg: 'var(--accent-c)', label: 'Ocupada' },
   'PENDIENTE LIMPIEZA': { bg: 'rgba(234,179,8,0.16)', fg: '#a16207', label: 'Pendiente limpieza' },
-  MANTENIMIENTO: { bg: 'rgba(59,130,246,0.14)', fg: '#2563eb', label: 'Mantenimiento' },
+  MANTENIMIENTO: { bg: 'rgb(250 204 21 / 14%)', fg: '#ca8a04', label: 'Mantenimiento' },
+  EMPLEADO: { bg: 'rgba(20,184,166,0.14)', fg: '#0d9488', label: 'Empleado' },
   RESERVADA: { bg: 'rgba(168,85,247,0.14)', fg: '#9333ea', label: 'Reservada' },
+};
+
+// Fondo de la tarjeta de habitación por estado (independiente del color del badge).
+const CARD_BG_LIBRE = 'rgb(139 247 179 / 18%)';
+const CARD_BG_OCUPADA = 'rgb(255 107 43 / 18%)';
+const CARD_BG_MANTENIMIENTO = 'rgb(250 204 21 / 20%)';
+
+export const CARD_BG: Partial<Record<ComputedRoomStatus, string>> = {
+  LIBRE: CARD_BG_LIBRE,
+  OCUPADA: CARD_BG_OCUPADA,
+  MANTENIMIENTO: CARD_BG_MANTENIMIENTO,
 };
 
 const STYLES = STATUS_STYLES;

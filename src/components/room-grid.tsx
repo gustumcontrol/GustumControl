@@ -6,6 +6,27 @@ import { RoomCard } from '@/components/room-card';
 import { RoomDetailDialog } from '@/components/room-detail-dialog';
 import type { RoomStatus } from '@/lib/types';
 
+const FLOOR_ORDINALS = [
+  'Primera',
+  'Segunda',
+  'Tercera',
+  'Cuarta',
+  'Quinta',
+  'Sexta',
+  'Séptima',
+  'Octava',
+  'Novena',
+  'Décima',
+];
+
+function floorLabel(floor: string) {
+  const n = Number(floor);
+  if (Number.isInteger(n) && n >= 1 && n <= FLOOR_ORDINALS.length) {
+    return `${FLOOR_ORDINALS[n - 1]} planta`;
+  }
+  return `Planta ${floor}`;
+}
+
 export function RoomGrid({ initialRooms }: { initialRooms: RoomStatus[] }) {
   const [rooms, setRooms] = useState<RoomStatus[]>(initialRooms);
 
@@ -15,14 +36,11 @@ export function RoomGrid({ initialRooms }: { initialRooms: RoomStatus[] }) {
       if (data) setRooms(data);
     };
 
-    const channel = supabase
-      .channel('reservations-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'reservations' },
-        refresh
-      )
-      .subscribe();
+    const channel = supabase.channel('room-grid-changes');
+    for (const table of ['reservations', 'maintenance_issues', 'room_staff_assignments']) {
+      channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh);
+    }
+    channel.subscribe();
 
     return () => {
       supabase.removeChannel(channel);
@@ -48,7 +66,7 @@ export function RoomGrid({ initialRooms }: { initialRooms: RoomStatus[] }) {
       {Object.entries(byFloor).map(([floor, floorRooms]) => (
         <div key={floor}>
           <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-2)' }}>
-            Piso {floor}
+            {floorLabel(floor)}
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {floorRooms.map((room) => (

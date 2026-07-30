@@ -103,10 +103,10 @@ export function UsersTable({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="shrink-0"
-          style={{ width: '28rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
+          style={{ maxWidth: '28rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
         />
         <div
-          className="flex items-center gap-1 rounded-lg p-1"
+          className="flex items-center gap-1 rounded-lg p-1 max-w-full overflow-x-auto"
           style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
         >
           {FILTERS.map((f) => (
@@ -114,7 +114,7 @@ export function UsersTable({
               key={f.value}
               type="button"
               onClick={() => setFilter(f.value)}
-              className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0"
               style={{
                 color: filter === f.value ? 'var(--accent-c)' : 'var(--text-2)',
                 background: filter === f.value ? 'var(--accent-dim)' : 'transparent',
@@ -132,7 +132,7 @@ export function UsersTable({
         </p>
       ) : (
         <div
-          className="rounded-xl overflow-hidden"
+          className="rounded-lg overflow-hidden"
           style={{ border: '1px solid var(--line)', background: 'var(--card-c)' }}
         >
           <table className="w-full text-sm">

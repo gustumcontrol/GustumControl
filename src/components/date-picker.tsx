@@ -114,7 +114,7 @@ export function DatePicker({
       >
         <Icon name="calendar" style="regular" size={13} color="var(--text-3)" />
         <span
-          className="flex-1 text-left"
+          className="flex-1 text-left truncate"
           style={{ color: selectedDate ? 'var(--light)' : 'var(--text-3)' }}
         >
           {displayLabel}
@@ -123,14 +123,14 @@ export function DatePicker({
 
       {open && (
         <div
-          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-1 rounded-xl shadow-lg z-30 p-3 w-72`}
+          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-1 rounded-lg shadow-lg z-30 p-3 w-72`}
           style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
         >
           <div className="flex items-center justify-between mb-2">
             <button
               type="button"
               onClick={goPrevMonth}
-              className="w-7 h-7 rounded-md flex items-center justify-center cursor-pointer transition-colors hover:bg-[var(--raised)]"
+              className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors hover:bg-[var(--raised)]"
             >
               <Icon name="chevron-left" style="solid" size={11} color="var(--text-2)" />
             </button>
@@ -140,7 +140,7 @@ export function DatePicker({
             <button
               type="button"
               onClick={goNextMonth}
-              className="w-7 h-7 rounded-md flex items-center justify-center cursor-pointer transition-colors hover:bg-[var(--raised)]"
+              className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors hover:bg-[var(--raised)]"
             >
               <Icon name="chevron-right" style="solid" size={11} color="var(--text-2)" />
             </button>
@@ -170,7 +170,7 @@ export function DatePicker({
                   type="button"
                   disabled={disabled}
                   onClick={() => handleSelectDay(d)}
-                  className="w-9 h-9 rounded-md text-sm transition-colors disabled:cursor-not-allowed"
+                  className="w-9 h-9 rounded-lg text-sm transition-colors disabled:cursor-not-allowed"
                   style={{
                     cursor: disabled ? 'not-allowed' : 'pointer',
                     background: isSelected ? 'var(--accent-c)' : 'transparent',

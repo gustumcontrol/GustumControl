@@ -59,7 +59,7 @@ export function MaintenanceTaskList({ tasks }: { tasks: MaintenanceIssueRow[] })
         return (
           <div
             key={task.id}
-            className="rounded-xl p-4 flex flex-col gap-3"
+            className="rounded-lg p-4 flex flex-col gap-3"
             style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
           >
             <div className="flex items-center justify-between gap-4">

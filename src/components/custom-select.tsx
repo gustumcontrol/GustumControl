@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from '@/components/icon';
 
@@ -54,7 +54,7 @@ export function CustomSelect({
 
   const selected = options.find((o) => o.value === value);
 
-  const updatePanelRect = () => {
+  const updatePanelRect = useCallback(() => {
     const el = triggerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
@@ -76,7 +76,7 @@ export function CustomSelect({
     // render (el layout effect corre en cada uno mientras está abierto) y
     // queda un loop infinito.
     setPanelRect((prev) => (prev && JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
-  };
+  }, [options.length, placement, searchable]);
 
   // Recalcula en cada render mientras está abierto (no solo al abrir): si
   // el panel queda abierto y algo re-renderiza la página (por ejemplo un
@@ -96,7 +96,7 @@ export function CustomSelect({
       window.removeEventListener('scroll', updatePanelRect, true);
       window.removeEventListener('resize', updatePanelRect);
     };
-  }, [open]);
+  }, [open, updatePanelRect]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -174,7 +174,7 @@ export function CustomSelect({
         createPortal(
           <div
             ref={panelRef}
-            className="fixed rounded-xl shadow-lg z-[100] flex flex-col overflow-hidden"
+            className="fixed rounded-lg shadow-lg z-[100] flex flex-col overflow-hidden"
             style={{
               ...(panelRect.placement === 'top'
                 ? { bottom: panelRect.bottom }
@@ -192,7 +192,7 @@ export function CustomSelect({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={searchPlaceholder}
-                  className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring"
+                  className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring"
                 />
               </div>
             )}
@@ -209,7 +209,7 @@ export function CustomSelect({
                       key={o.value}
                       type="button"
                       onClick={() => handleSelect(o.value)}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-left cursor-pointer transition-colors"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left cursor-pointer transition-colors"
                       style={{
                         background: isSelected ? 'var(--accent-dim)' : 'transparent',
                         color: isSelected ? 'var(--accent-c)' : 'var(--text-2)',

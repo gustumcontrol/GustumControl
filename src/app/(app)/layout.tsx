@@ -76,7 +76,7 @@ export default async function AppLayout({
         style={{ background: 'var(--bg)' }}
       >
         <div
-          className="w-full max-w-sm rounded-2xl p-8 text-center"
+          className="w-full max-w-sm rounded-lg p-8 text-center"
           style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
         >
           <h1 className="text-lg font-semibold mb-2" style={{ color: 'var(--light)' }}>
@@ -88,7 +88,7 @@ export default async function AppLayout({
           <form action="/api/auth/signout" method="POST">
             <button
               type="submit"
-              className="w-full text-sm px-3 py-2 rounded-md transition-colors cursor-pointer"
+              className="w-full text-sm px-3 py-2 rounded-lg transition-colors cursor-pointer"
               style={{ border: '1px solid var(--line-2)', color: 'var(--text-2)' }}
             >
               Salir
@@ -151,7 +151,7 @@ export default async function AppLayout({
             <form action="/api/auth/signout" method="POST">
               <button
                 type="submit"
-                className="text-sm px-3 py-1.5 rounded-md transition-colors cursor-pointer"
+                className="text-sm px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                 style={{ border: '1px solid var(--line-2)', color: 'var(--text-2)' }}
               >
                 Salir
@@ -191,7 +191,7 @@ export default async function AppLayout({
             <form action="/api/auth/signout" method="POST">
               <button
                 type="submit"
-                className="text-sm px-3 py-1.5 rounded-md transition-colors cursor-pointer"
+                className="text-sm px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                 style={{ border: '1px solid var(--line-2)', color: 'var(--text-2)' }}
               >
                 Salir

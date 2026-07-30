@@ -52,7 +52,7 @@ export function CleaningTaskList({ tasks }: { tasks: CleaningTask[] }) {
       {tasks.map((task) => (
         <div
           key={task.id}
-          className="rounded-xl p-4 flex items-center justify-between gap-4"
+          className="rounded-lg p-4 flex items-center justify-between gap-4"
           style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
         >
           <div>

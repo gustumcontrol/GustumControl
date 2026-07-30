@@ -175,7 +175,7 @@ export function MaintenanceIssuesHistoryList({
               setPage(1);
             }}
             className="shrink-0"
-            style={{ width: '24rem' }}
+            style={{ maxWidth: '24rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
           />
           <Button
             type="button"
@@ -203,15 +203,17 @@ export function MaintenanceIssuesHistoryList({
               placeholder="Todo el personal"
               searchable
               searchPlaceholder="Buscar personal..."
+              triggerBackground="#FFFFFF"
+              triggerBorderColor="var(--line)"
               options={[{ value: '', label: 'Todo el personal' }, ...staffOptions]}
             />
           </div>
 
           <div
-            className="flex items-center gap-2 rounded-lg px-3 py-2"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap"
             style={{ background: 'var(--raised)' }}
           >
-            <div className="w-40">
+            <div className="w-32 sm:w-40">
               <DatePicker
                 value={dateFrom}
                 onChange={(v) => {
@@ -220,12 +222,14 @@ export function MaintenanceIssuesHistoryList({
                   setPage(1);
                 }}
                 placeholder="Desde"
+                triggerBackground="var(--card-c)"
+                triggerBorderColor="var(--line)"
               />
             </div>
             <span className="text-sm" style={{ color: 'var(--text-3)' }}>
               —
             </span>
-            <div className="w-40">
+            <div className="w-32 sm:w-40">
               <DatePicker
                 value={dateTo}
                 onChange={(v) => {
@@ -235,6 +239,8 @@ export function MaintenanceIssuesHistoryList({
                 placeholder="Hasta"
                 minDate={dateFrom}
                 align="right"
+                triggerBackground="var(--card-c)"
+                triggerBorderColor="var(--line)"
               />
             </div>
             {(dateFrom || dateTo) && (
@@ -261,7 +267,7 @@ export function MaintenanceIssuesHistoryList({
         </p>
       ) : (
         <div
-          className="rounded-xl overflow-hidden"
+          className="rounded-lg overflow-hidden"
           style={{ border: '1px solid var(--line)', background: 'var(--card-c)' }}
         >
           <table className="w-full text-sm">
@@ -272,7 +278,7 @@ export function MaintenanceIssuesHistoryList({
                     <th
                       key={h}
                       className="text-left font-medium px-4 py-3"
-                      style={{ color: 'var(--text-3)' }}
+                      style={{ color: 'var(--text-2)' }}
                     >
                       {h}
                     </th>

@@ -130,6 +130,61 @@ export type Database = {
           },
         ];
       };
+      room_staff_assignments: {
+        Row: {
+          id: string;
+          room_id: string;
+          staff_name: string;
+          notes: string | null;
+          assigned_by: string | null;
+          assigned_at: string;
+          released_by: string | null;
+          released_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          room_id: string;
+          staff_name: string;
+          notes?: string | null;
+          assigned_by?: string | null;
+          assigned_at?: string;
+          released_by?: string | null;
+          released_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          room_id?: string;
+          staff_name?: string;
+          notes?: string | null;
+          assigned_by?: string | null;
+          assigned_at?: string;
+          released_by?: string | null;
+          released_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "room_staff_assignments_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "room_staff_assignments_assigned_by_fkey";
+            columns: ["assigned_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "room_staff_assignments_released_by_fkey";
+            columns: ["released_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       notifications: {
         Row: {
           created_at: string;
@@ -429,6 +484,8 @@ export type Database = {
           guest_name: string | null;
           maintenance_issue_id: string | null;
           maintenance_description: string | null;
+          staff_assignment_id: string | null;
+          staff_name: string | null;
           number: string | null;
           reservation_id: string | null;
           room_id: string | null;
@@ -462,6 +519,14 @@ export type Database = {
         Args: { p_issue_id: string; p_status: string };
         Returns: undefined;
       };
+      assign_room_to_staff: {
+        Args: { p_room_id: string; p_staff_name: string; p_notes?: string | null };
+        Returns: string;
+      };
+      release_staff_room: {
+        Args: { p_assignment_id: string };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
@@ -479,6 +544,8 @@ export type ReservationHistory =
   Database["public"]["Tables"]["reservation_history"]["Row"];
 export type CleaningLogEntry = Database["public"]["Tables"]["cleaning_log"]["Row"];
 export type MaintenanceIssue = Database["public"]["Tables"]["maintenance_issues"]["Row"];
+export type RoomStaffAssignment =
+  Database["public"]["Tables"]["room_staff_assignments"]["Row"];
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 export type RoomStatus = Database["public"]["Views"]["room_status"]["Row"];
 
@@ -493,4 +560,5 @@ export type ComputedRoomStatus =
   | "OCUPADA"
   | "PENDIENTE LIMPIEZA"
   | "MANTENIMIENTO"
+  | "EMPLEADO"
   | "RESERVADA";

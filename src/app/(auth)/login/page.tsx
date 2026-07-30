@@ -16,11 +16,14 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [success, setSuccess] = useState(() =>
+    searchParams.get('success') === 'signup'
+      ? 'Cuenta creada. Revisa tu correo y confirma tu cuenta antes de iniciar sesión.'
+      : ''
+  );
 
   useEffect(() => {
     if (searchParams.get('success') === 'signup') {
-      setSuccess('Cuenta creada. Revisa tu correo y confirma tu cuenta antes de iniciar sesión.');
       window.history.replaceState({}, '', '/login');
     }
   }, [searchParams]);
@@ -113,7 +116,7 @@ export default function LoginPage() {
       style={{ background: 'var(--bg)' }}
     >
       <div
-        className="w-full max-w-sm rounded-2xl p-8"
+        className="w-full max-w-sm rounded-lg p-8"
         style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
       >
         <div className="flex items-center justify-center mb-6">

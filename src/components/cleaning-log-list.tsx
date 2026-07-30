@@ -222,7 +222,7 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
   return (
     <div className="flex flex-col gap-4">
       <div
-        className="rounded-xl p-4 w-fit"
+        className="rounded-lg p-4 w-fit"
         style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
       >
         <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>
@@ -243,7 +243,7 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
               setPage(1);
             }}
             className="shrink-0"
-            style={{ width: '24rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
+            style={{ maxWidth: '24rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
           />
           <Button
             type="button"
@@ -278,10 +278,10 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
           </div>
 
           <div
-            className="flex items-center gap-2 rounded-lg px-3 py-2"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap"
             style={{ background: 'var(--raised)' }}
           >
-            <div className="w-40">
+            <div className="w-32 sm:w-40">
               <DatePicker
                 value={dateFrom}
                 onChange={(v) => {
@@ -297,7 +297,7 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
             <span className="text-sm" style={{ color: 'var(--text-3)' }}>
               —
             </span>
-            <div className="w-40">
+            <div className="w-32 sm:w-40">
               <DatePicker
                 value={dateTo}
                 onChange={(v) => {
@@ -335,7 +335,7 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
         </p>
       ) : (
         <div
-          className="rounded-xl overflow-hidden"
+          className="rounded-lg overflow-hidden"
           style={{ border: '1px solid var(--line)', background: 'var(--card-c)' }}
         >
           <table className="w-full text-sm">

@@ -69,8 +69,8 @@ export function NavLinks({
             href={item.href}
             className={
               mobile
-                ? 'px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors'
-                : 'px-3 py-2 rounded-md text-sm font-medium transition-colors'
+                ? 'px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors'
+                : 'px-3 py-2 rounded-lg text-sm font-medium transition-colors'
             }
             style={{
               color: active ? 'var(--accent-c)' : 'var(--text-2)',

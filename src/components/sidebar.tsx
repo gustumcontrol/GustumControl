@@ -120,7 +120,7 @@ export function Sidebar({
           <button
             type="submit"
             title={collapsed ? 'Salir' : undefined}
-            className="w-full h-9 px-3 text-sm rounded-md transition-colors cursor-pointer flex items-center justify-center"
+            className="w-full h-9 px-3 text-sm rounded-lg transition-colors cursor-pointer flex items-center justify-center"
             style={{ border: '1px solid var(--line-2)', color: 'var(--text-2)' }}
           >
             {collapsed ? (

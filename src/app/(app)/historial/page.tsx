@@ -35,7 +35,7 @@ export default async function HistorialPage() {
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div
-      className="rounded-xl p-4"
+      className="rounded-lg p-4"
       style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
     >
       <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>

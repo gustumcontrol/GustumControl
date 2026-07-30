@@ -81,7 +81,7 @@ function TicketCell({ id, ticket }: { id: string; ticket: string | null }) {
       onBlur={save}
       disabled={isPending}
       placeholder="Ticket..."
-      className="w-24 rounded-md bg-transparent text-sm outline-none px-2 py-1.5 border transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+      className="w-24 rounded-lg bg-transparent text-sm outline-none px-2 py-1.5 border transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
       style={{ color: 'var(--text-2)', borderColor: 'var(--input)' }}
     />
   );
@@ -127,7 +127,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
               setPage(1);
             }}
             className="shrink-0"
-            style={{ width: '24rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
+            style={{ maxWidth: '24rem', background: '#FFFFFF', border: '1px solid var(--line)' }}
           />
           <Button
             type="button"
@@ -146,7 +146,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
 
         <div className="flex flex-wrap items-center gap-3">
           <div
-            className="flex items-center gap-1 rounded-lg p-1"
+            className="flex items-center gap-1 rounded-lg p-1 max-w-full overflow-x-auto"
             style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
           >
             {TYPE_FILTERS.map((f) => (
@@ -157,7 +157,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
                   setTypeFilter(f.value);
                   setPage(1);
                 }}
-                className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0"
                 style={{
                   color: typeFilter === f.value ? 'var(--accent-c)' : 'var(--text-2)',
                   background: typeFilter === f.value ? 'var(--accent-dim)' : 'transparent',
@@ -169,10 +169,10 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
           </div>
 
           <div
-            className="flex items-center gap-2 rounded-lg px-3 py-2"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap"
             style={{ background: 'var(--raised)' }}
           >
-            <div className="w-40">
+            <div className="w-32 sm:w-40">
               <DatePicker
                 value={dateFrom}
                 onChange={(v) => {
@@ -188,7 +188,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
             <span className="text-sm" style={{ color: 'var(--text-3)' }}>
               —
             </span>
-            <div className="w-40">
+            <div className="w-32 sm:w-40">
               <DatePicker
                 value={dateTo}
                 onChange={(v) => {
@@ -233,7 +233,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
         </p>
       ) : (
         <div
-          className="rounded-xl overflow-x-auto"
+          className="rounded-lg overflow-x-auto"
           style={{ border: '1px solid var(--line)', background: 'var(--card-c)' }}
         >
           <table className="w-full text-sm" style={{ minWidth: '72rem' }}>

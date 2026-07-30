@@ -28,7 +28,7 @@ export default async function NuevaReservaPage({
         variant="outline"
         render={<Link href="/reservas" />}
         nativeButton={false}
-        className="absolute left-0 top-0 w-fit"
+        className="sticky top-8 z-10 w-fit -mb-11"
         style={{ color: '#323E51', background: '#E2E5EC', border: 'none' }}
       >
         <Icon name="arrow-left" style="solid" size={12} color="#323E51" />
@@ -37,7 +37,7 @@ export default async function NuevaReservaPage({
 
       <div className="max-w-lg mx-auto">
         <div
-          className="rounded-2xl p-8"
+          className="rounded-lg p-8"
           style={{ background: '#FFFFFF', border: '1px solid var(--line)' }}
         >
           <h1 className="text-2xl font-semibold mb-6" style={{ color: 'var(--light)' }}>

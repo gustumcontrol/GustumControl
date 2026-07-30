@@ -48,7 +48,7 @@ export default function SignupPage() {
       style={{ background: 'var(--bg)' }}
     >
       <div
-        className="w-full max-w-sm rounded-2xl p-8"
+        className="w-full max-w-sm rounded-lg p-8"
         style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
       >
         <div className="flex items-center justify-center mb-6">
