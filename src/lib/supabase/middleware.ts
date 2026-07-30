@@ -32,6 +32,24 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const maintenancePath = '/sistema-en-mantenimiento';
+  if (
+    request.nextUrl.pathname !== maintenancePath &&
+    !request.nextUrl.pathname.startsWith('/api')
+  ) {
+    const { data: settings } = await supabase
+      .from('app_settings')
+      .select('maintenance_mode')
+      .eq('id', 1)
+      .single();
+
+    if (settings?.maintenance_mode) {
+      const url = request.nextUrl.clone();
+      url.pathname = maintenancePath;
+      return NextResponse.redirect(url);
+    }
+  }
+
   const protectedRoutes = [
     '/dashboard',
     '/reservas',

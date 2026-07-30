@@ -12,6 +12,21 @@ export type Database = {
   };
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: number;
+          maintenance_mode: boolean;
+        };
+        Insert: {
+          id?: number;
+          maintenance_mode?: boolean;
+        };
+        Update: {
+          id?: number;
+          maintenance_mode?: boolean;
+        };
+        Relationships: [];
+      };
       board_plans: {
         Row: {
           name: string;
