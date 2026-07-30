@@ -4,7 +4,7 @@ export const STATUS_STYLES: Record<ComputedRoomStatus, { bg: string; fg: string;
   LIBRE: { bg: 'rgba(34,197,94,0.12)', fg: '#16a34a', label: 'Libre' },
   OCUPADA: { bg: 'rgb(255 107 43 / 12%)', fg: 'var(--accent-c)', label: 'Ocupada' },
   'PENDIENTE LIMPIEZA': { bg: 'rgba(234,179,8,0.16)', fg: '#a16207', label: 'Pendiente limpieza' },
-  MANTENIMIENTO: { bg: 'rgb(250 204 21 / 14%)', fg: '#ca8a04', label: 'Mantenimiento' },
+  MANTENIMIENTO: { bg: 'rgba(234,179,8,0.16)', fg: '#a16207', label: 'Mantenimiento' },
   EMPLEADO: { bg: 'rgba(20,184,166,0.14)', fg: '#0d9488', label: 'Empleado' },
   RESERVADA: { bg: 'rgba(168,85,247,0.14)', fg: '#9333ea', label: 'Reservada' },
 };
@@ -18,6 +18,7 @@ export const CARD_BG: Partial<Record<ComputedRoomStatus, string>> = {
   LIBRE: CARD_BG_LIBRE,
   OCUPADA: CARD_BG_OCUPADA,
   MANTENIMIENTO: CARD_BG_MANTENIMIENTO,
+  'PENDIENTE LIMPIEZA': CARD_BG_MANTENIMIENTO,
 };
 
 const STYLES = STATUS_STYLES;

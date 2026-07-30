@@ -64,12 +64,7 @@ export function RoomCard({ room }: { room: RoomStatus }) {
             {room.type}
           </p>
         </div>
-        <div
-          className="transition-opacity"
-          style={{ opacity: hovered ? 1 : 0 }}
-        >
-          <StatusBadge status={status} />
-        </div>
+        <StatusBadge status={status} />
       </div>
 
       <div className="mt-1 text-sm h-10" style={{ color: 'var(--text-2)' }}>
