@@ -33,19 +33,33 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const maintenancePath = '/sistema-en-mantenimiento';
-  if (
-    request.nextUrl.pathname !== maintenancePath &&
-    !request.nextUrl.pathname.startsWith('/api')
-  ) {
+  const isMaintenancePath = request.nextUrl.pathname === maintenancePath;
+
+  if (!request.nextUrl.pathname.startsWith('/api')) {
     const { data: settings } = await supabase
       .from('app_settings')
       .select('maintenance_mode')
       .eq('id', 1)
       .single();
 
-    if (settings?.maintenance_mode) {
+    if (settings?.maintenance_mode && !isMaintenancePath) {
       const url = request.nextUrl.clone();
       url.pathname = maintenancePath;
+      return NextResponse.redirect(url);
+    }
+
+    if (!settings?.maintenance_mode && isMaintenancePath) {
+      const url = request.nextUrl.clone();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        url.pathname = DEFAULT_ROUTE_BY_ROLE[(profile?.role as Role) ?? 'recepcion'] ?? '/dashboard';
+      } else {
+        url.pathname = '/login';
+      }
       return NextResponse.redirect(url);
     }
   }
