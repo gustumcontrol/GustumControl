@@ -152,7 +152,7 @@ export function EditReservationDialog({
       }}
     >
       <DialogTrigger render={<Button size="sm" variant="outline" />}>
-        <Icon name="pen" style="regular" size={12} />
+        <Icon name="pen" style="duotone" size={12} />
         Editar reserva
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">

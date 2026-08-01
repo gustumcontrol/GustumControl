@@ -71,7 +71,7 @@ export function Sidebar({
             className="flex items-center justify-center transition-transform duration-300 ease-in-out"
             style={{ transform: collapsed ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
-            <Icon name="chevron-left" style="solid" size={9} color="var(--text-3)" />
+            <Icon name="chevron-left" style="duotone" size={9} color="var(--text-3)" />
           </span>
         </button>
       </div>
@@ -124,7 +124,7 @@ export function Sidebar({
             style={{ border: '1px solid var(--line-2)', color: 'var(--text-2)' }}
           >
             {collapsed ? (
-              <Icon name="right-from-bracket" style="solid" size={14} color="var(--text-2)" />
+              <Icon name="right-from-bracket" style="duotone" size={14} color="var(--text-2)" />
             ) : (
               'Salir'
             )}

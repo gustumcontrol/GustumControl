@@ -51,7 +51,7 @@ export function AddNoteDialog({
       }}
     >
       <DialogTrigger render={<Button size="sm" variant="outline" />}>
-        <Icon name="comment-dots" style="regular" size={12} />
+        <Icon name="comment-dots" style="duotone" size={12} />
         {notes ? 'Editar nota' : 'Añadir nota'}
       </DialogTrigger>
       <DialogContent>

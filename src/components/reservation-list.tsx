@@ -86,7 +86,7 @@ function Stat({ icon, label, value }: { icon: string; label: string; value: stri
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-1.5 mb-1">
-        <Icon name={icon} style="regular" size={11} color="var(--text-3)" className="shrink-0" />
+        <Icon name={icon} style="duotone" size={11} color="var(--text-3)" className="shrink-0" />
         <span className="text-sm font-medium" style={{ color: 'var(--text-3)' }}>
           {label}
         </span>
@@ -170,7 +170,7 @@ function ReservationCard({
               className="inline-flex transition-transform duration-300 ease-in-out"
               style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
             >
-              <Icon name="chevron-down" style="solid" size={11} color="var(--text-2)" />
+              <Icon name="chevron-down" style="duotone" size={11} color="var(--text-2)" />
             </span>
           </button>
         </div>
@@ -188,7 +188,7 @@ function ReservationCard({
                 {formatDateLabel(r.check_in)}
               </p>
             </div>
-            <Icon name="arrow-right" style="solid" size={10} color="var(--text-3)" className="mt-3" />
+            <Icon name="arrow-right" style="duotone" size={10} color="var(--text-3)" className="mt-3" />
             <div>
               <p
                 className="text-[10px] font-medium uppercase tracking-wide leading-none mb-1"
@@ -247,7 +247,7 @@ function ReservationCard({
             className="inline-flex transition-transform duration-300 ease-in-out"
             style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
-            <Icon name="chevron-down" style="solid" size={11} color="var(--text-2)" />
+            <Icon name="chevron-down" style="duotone" size={11} color="var(--text-2)" />
           </span>
         </button>
       </div>
@@ -272,7 +272,7 @@ function ReservationCard({
             {r.notes && (
               <div className="rounded-lg p-3" style={{ border: '1px solid var(--line)' }}>
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <Icon name="note-sticky" style="regular" size={12} color="var(--accent-c)" />
+                  <Icon name="note-sticky" style="duotone" size={12} color="var(--accent-c)" />
                   <span
                     className="text-[10px] font-medium uppercase tracking-wide"
                     style={{ color: 'var(--text-3)' }}
@@ -322,13 +322,9 @@ export function ReservationList({
   return (
     <div className="flex flex-col gap-4">
       <div className="relative max-w-sm">
-        <Icon
-          name="magnifying-glass"
-          style="regular"
-          size={14}
-          color="var(--text-3)"
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-        />
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+          <Icon name="magnifying-glass" style="duotone" size={14} color="var(--text-3)" />
+        </span>
         <Input
           placeholder="Buscar por huésped o habitación..."
           value={query}

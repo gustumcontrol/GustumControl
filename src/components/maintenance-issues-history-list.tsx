@@ -169,13 +169,9 @@ export function MaintenanceIssuesHistoryList({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="relative shrink-0" style={{ maxWidth: '24rem', width: '100%' }}>
-            <Icon
-              name="magnifying-glass"
-              style="regular"
-              size={14}
-              color="var(--text-3)"
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-            />
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+              <Icon name="magnifying-glass" style="duotone" size={14} color="var(--text-3)" />
+            </span>
             <Input
               placeholder="Buscar por habitación, descripción o quién lo hizo..."
               value={query}

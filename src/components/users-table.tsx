@@ -102,13 +102,9 @@ export function UsersTable({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative shrink-0" style={{ maxWidth: '28rem', width: '100%' }}>
-          <Icon
-            name="magnifying-glass"
-            style="regular"
-            size={14}
-            color="var(--text-3)"
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-          />
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <Icon name="magnifying-glass" style="duotone" size={14} color="var(--text-3)" />
+          </span>
           <Input
             placeholder="Buscar por nombre, email o departamento..."
             value={query}

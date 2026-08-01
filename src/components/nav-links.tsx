@@ -46,9 +46,10 @@ export function NavLinks({
               {item.icon && (
                 <Icon
                   name={item.icon}
-                  style={active ? 'solid' : 'regular'}
+                  style="duotone"
                   size={18}
                   color={active ? 'var(--accent-c)' : 'var(--text-3)'}
+                  secondaryOpacity={0.55}
                   className="shrink-0"
                 />
               )}

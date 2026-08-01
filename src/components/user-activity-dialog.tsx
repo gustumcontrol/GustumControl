@@ -84,13 +84,9 @@ export function UserActivityDialog({
 
         <div className="flex flex-col gap-3 mb-2 shrink-0">
           <div className="relative">
-            <Icon
-              name="magnifying-glass"
-              style="regular"
-              size={14}
-              color="var(--text-3)"
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-            />
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+              <Icon name="magnifying-glass" style="duotone" size={14} color="var(--text-3)" />
+            </span>
             <Input
               placeholder="Buscar en la actividad..."
               value={query}
@@ -178,7 +174,7 @@ export function UserActivityDialog({
                           >
                             <Icon
                               name={meta?.icon ?? 'circle'}
-                              style="solid"
+                              style="duotone"
                               size={12}
                               color={meta?.color ?? 'var(--text-3)'}
                             />

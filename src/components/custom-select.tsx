@@ -163,7 +163,7 @@ export function CustomSelect({
         )}
         <Icon
           name="chevron-down"
-          style="solid"
+          style="duotone"
           size={size === 'sm' ? 9 : 11}
           color={triggerColor ?? 'var(--text-3)'}
         />
@@ -223,7 +223,7 @@ export function CustomSelect({
                           </span>
                         )}
                       </span>
-                      {isSelected && <Icon name="check" style="solid" size={12} color="var(--accent-c)" />}
+                      {isSelected && <Icon name="check" style="duotone" size={12} color="var(--accent-c)" />}
                     </button>
                   );
                 })

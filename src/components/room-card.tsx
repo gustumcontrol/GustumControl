@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Lock } from 'lucide-react';
+import { Icon } from '@/components/icon';
 import { StatusBadge, STATUS_STYLES, CARD_BG } from '@/components/status-badge';
 import type { RoomStatus, ComputedRoomStatus } from '@/lib/types';
 
@@ -34,7 +34,7 @@ export function RoomCard({ room }: { room: RoomStatus }) {
         </div>
 
         <div className="mt-1 h-10 flex flex-col items-center justify-center gap-1">
-          <Lock size={18} style={{ color: fg }} strokeWidth={2.25} />
+          <Icon name="lock" style="duotone" size={18} color={fg} />
           {room.staff_name && (
             <p className="text-xs font-medium truncate max-w-full" style={{ color: fg }}>
               {room.staff_name}

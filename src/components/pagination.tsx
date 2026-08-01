@@ -72,7 +72,7 @@ export function Pagination({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-40"
             style={{ color: 'var(--text-2)' }}
           >
-            <Icon name="arrow-left" style="solid" size={11} color="var(--text-3)" />
+            <Icon name="arrow-left" style="duotone" size={11} color="var(--text-3)" />
             Prev
           </button>
 
@@ -105,7 +105,7 @@ export function Pagination({
             style={{ color: 'var(--text-2)' }}
           >
             Next
-            <Icon name="arrow-right" style="solid" size={11} color="var(--text-3)" />
+            <Icon name="arrow-right" style="duotone" size={11} color="var(--text-3)" />
           </button>
         </div>
       </div>

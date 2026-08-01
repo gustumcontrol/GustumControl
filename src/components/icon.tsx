@@ -9,9 +9,10 @@ import React from 'react';
  */
 export function Icon({
   name,
-  style = 'solid',
+  style = 'duotone',
   size = 16,
   color = 'currentColor',
+  secondaryOpacity,
   className,
   spin,
   fixedWidth,
@@ -20,6 +21,8 @@ export function Icon({
   style?: 'solid' | 'regular' | 'light' | 'thin' | 'duotone' | 'sharp-solid';
   size?: number;
   color?: string;
+  /** Opacidad de la capa clara de un ícono duotone (Font Awesome usa 0.4 por defecto). */
+  secondaryOpacity?: number;
   className?: string;
   spin?: boolean;
   fixedWidth?: boolean;
@@ -35,7 +38,15 @@ export function Icon({
       ]
         .filter(Boolean)
         .join(' ')}
-      style={{ fontSize: size, color, lineHeight: 1, flexShrink: 0 }}
+      style={{
+        fontSize: size,
+        color,
+        lineHeight: 1,
+        flexShrink: 0,
+        ...(secondaryOpacity !== undefined && {
+          ['--fa-secondary-opacity' as string]: secondaryOpacity,
+        }),
+      }}
       aria-hidden="true"
     />
   );

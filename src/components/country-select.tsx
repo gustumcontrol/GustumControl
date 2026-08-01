@@ -45,7 +45,7 @@ function CountryRow({
     >
       <Flag code={country.code} />
       <span className="flex-1 truncate">{country.name}</span>
-      {selected && <Icon name="check" style="solid" size={12} color="var(--accent-c)" />}
+      {selected && <Icon name="check" style="duotone" size={12} color="var(--accent-c)" />}
     </button>
   );
 }
@@ -114,7 +114,7 @@ export function CountrySelect({
             Selecciona un país
           </span>
         )}
-        <Icon name="chevron-down" style="solid" size={11} color="var(--text-3)" />
+        <Icon name="chevron-down" style="duotone" size={11} color="var(--text-3)" />
       </button>
 
       {open && (

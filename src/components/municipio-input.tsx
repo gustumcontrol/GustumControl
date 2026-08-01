@@ -77,7 +77,7 @@ export function MunicipioInput({
           }}
           className="cursor-pointer"
         >
-          <Icon name="chevron-down" style="solid" size={11} color="var(--text-3)" />
+          <Icon name="chevron-down" style="duotone" size={11} color="var(--text-3)" />
         </button>
       </div>
 

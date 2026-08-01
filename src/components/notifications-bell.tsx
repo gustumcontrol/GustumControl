@@ -135,7 +135,7 @@ export function NotificationsBell({
         style={{ color: 'var(--text-2)', background: open ? 'var(--raised)' : 'transparent' }}
       >
         <span className="relative shrink-0">
-          <Icon name="bell" style="regular" size={16} color="var(--text-3)" />
+          <Icon name="bell" style="duotone" size={16} color="var(--text-3)" />
           {collapsed && unreadCount > 0 && (
             <span
               className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
@@ -205,7 +205,7 @@ export function NotificationsBell({
                       >
                         <Icon
                           name={TYPE_ICON[n.type] ?? 'bell'}
-                          style="solid"
+                          style="duotone"
                           size={13}
                           color={isUnread ? 'var(--accent-c)' : 'var(--text-3)'}
                         />

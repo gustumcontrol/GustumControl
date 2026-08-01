@@ -48,7 +48,7 @@ function KpiCard({
         <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>
           {label}
         </span>
-        <Icon name={icon} style="regular" size={14} color="var(--accent-c)" />
+        <Icon name={icon} style="duotone" size={14} color="var(--accent-c)" />
       </div>
       <span className="text-2xl font-semibold" style={{ color: 'var(--light)' }}>
         {value}

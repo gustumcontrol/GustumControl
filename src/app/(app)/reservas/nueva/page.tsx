@@ -31,7 +31,7 @@ export default async function NuevaReservaPage({
         className="sticky top-8 z-10 w-fit -mb-11"
         style={{ color: '#323E51', background: '#E2E5EC', border: 'none' }}
       >
-        <Icon name="arrow-left" style="solid" size={12} color="#323E51" />
+        <Icon name="arrow-left" style="duotone" size={12} color="#323E51" />
         Volver
       </Button>
 

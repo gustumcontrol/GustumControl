@@ -112,7 +112,7 @@ export function DatePicker({
           background: triggerBackground ?? 'transparent',
         }}
       >
-        <Icon name="calendar" style="regular" size={13} color="var(--text-3)" />
+        <Icon name="calendar" style="duotone" size={13} color="var(--text-3)" />
         <span
           className="flex-1 text-left truncate"
           style={{ color: selectedDate ? 'var(--light)' : 'var(--text-3)' }}
@@ -132,7 +132,7 @@ export function DatePicker({
               onClick={goPrevMonth}
               className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors hover:bg-[var(--raised)]"
             >
-              <Icon name="chevron-left" style="solid" size={11} color="var(--text-2)" />
+              <Icon name="chevron-left" style="duotone" size={11} color="var(--text-2)" />
             </button>
             <span className="text-sm font-medium" style={{ color: 'var(--light)' }}>
               {MONTHS[month]} {year}
@@ -142,7 +142,7 @@ export function DatePicker({
               onClick={goNextMonth}
               className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors hover:bg-[var(--raised)]"
             >
-              <Icon name="chevron-right" style="solid" size={11} color="var(--text-2)" />
+              <Icon name="chevron-right" style="duotone" size={11} color="var(--text-2)" />
             </button>
           </div>
 
