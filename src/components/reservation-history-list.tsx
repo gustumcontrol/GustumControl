@@ -10,6 +10,7 @@ import { DatePicker } from '@/components/date-picker';
 import { Pagination } from '@/components/pagination';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import { updateReservationHistoryTicket } from '@/lib/actions/reservations';
+import { todayISOInHotelTimezone } from '@/lib/date';
 import type { ReservationHistory } from '@/lib/types';
 
 const TYPE_FILTERS: { value: 'all' | 'Doble' | 'Triple'; label: string }[] = [
@@ -61,7 +62,7 @@ async function exportEntriesToXlsx(entries: ReservationHistory[]) {
 
   await writeXlsxFile([headerRow, ...dataRows], {
     columns: EXPORT_COLUMNS.map((c) => ({ width: c.width })),
-  }).toFile(`historial-reservas-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }).toFile(`historial-reservas-${todayISOInHotelTimezone()}.xlsx`);
 }
 
 function TicketCell({ id, ticket }: { id: string; ticket: string | null }) {
@@ -121,7 +122,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="relative shrink-0" style={{ maxWidth: '24rem', width: '100%' }}>
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none inline-flex items-center">
               <Icon name="magnifying-glass" style="duotone" size={14} color="var(--text-3)" />
             </span>
             <Input

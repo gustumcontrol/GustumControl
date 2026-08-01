@@ -17,6 +17,7 @@ import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import { Pagination } from '@/components/pagination';
 import { CustomSelect } from '@/components/custom-select';
 import { DatePicker } from '@/components/date-picker';
+import { todayISOInHotelTimezone } from '@/lib/date';
 
 export type CleaningLogRow = {
   id: string;
@@ -80,7 +81,7 @@ async function exportSessionsToXlsx(sessions: CleaningSession[]) {
 
   await writeXlsxFile([headerRow, ...dataRows], {
     columns: EXPORT_COLUMNS.map((c) => ({ width: c.width })),
-  }).toFile(`historial-limpieza-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }).toFile(`historial-limpieza-${todayISOInHotelTimezone()}.xlsx`);
 }
 
 function groupSessions(entries: CleaningLogRow[]): CleaningSession[] {
@@ -237,7 +238,7 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="relative shrink-0" style={{ maxWidth: '24rem', width: '100%' }}>
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none inline-flex items-center">
               <Icon name="magnifying-glass" style="duotone" size={14} color="var(--text-3)" />
             </span>
             <Input

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { todayISOInHotelTimezone } from '@/lib/date';
 
 const FIELD_LABELS: Record<string, string> = {
   guest_name: 'nombre',
@@ -53,7 +54,7 @@ export async function createReservation(input: CreateReservationInput) {
     return { error: 'No autenticado' };
   }
 
-  const todayISO = new Date().toISOString().slice(0, 10);
+  const todayISO = todayISOInHotelTimezone();
   if (input.checkIn < todayISO) {
     return { error: 'La fecha de entrada no puede ser anterior a hoy.' };
   }

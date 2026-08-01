@@ -14,6 +14,7 @@ import { MunicipioInput } from '@/components/municipio-input';
 import { createReservation } from '@/lib/actions/reservations';
 import { PROVINCES_BY_COUNTRY } from '@/lib/provinces';
 import { DOBLE_INDIVIDUAL_PRICE } from '@/lib/pricing';
+import { todayISOInHotelTimezone } from '@/lib/date';
 import type { RoomStatus } from '@/lib/types';
 
 type RoomTypePrice = { name: string; price_per_night: number };
@@ -61,8 +62,8 @@ export function ReservationForm({
   const [roomId, setRoomId] = useState(defaultRoom?.room_id ?? '');
   const [guestName, setGuestName] = useState('');
   const [guestsCount, setGuestsCount] = useState(1);
-  const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const [checkIn, setCheckIn] = useState(() => new Date().toISOString().slice(0, 10));
+  const todayISO = useMemo(() => todayISOInHotelTimezone(), []);
+  const [checkIn, setCheckIn] = useState(() => todayISOInHotelTimezone());
   const [nights, setNights] = useState(1);
   const [boardPlan, setBoardPlan] = useState('');
   const [dobleOccupancy, setDobleOccupancy] = useState<'doble' | 'individual'>('doble');
