@@ -8,6 +8,7 @@ import { CustomSelect } from '@/components/custom-select';
 import { RoleBadge, STATUS_STYLES } from '@/components/user-badges';
 import { EditUserDialog } from '@/components/edit-user-dialog';
 import { DeleteUserButton } from '@/components/delete-user-button';
+import { UserActivityDialog } from '@/components/user-activity-dialog';
 import { updateUserStatus } from '@/lib/actions/users';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import type { Profile, UserStatus } from '@/lib/types';
@@ -82,6 +83,7 @@ export function UsersTable({
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | UserStatus>('all');
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
+  const [activityUser, setActivityUser] = useState<Profile | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -207,6 +209,9 @@ export function UsersTable({
                         <Button variant="outline" size="sm" onClick={() => setEditingUser(u)}>
                           Editar
                         </Button>
+                        <Button variant="outline" size="sm" onClick={() => setActivityUser(u)}>
+                          Actividades
+                        </Button>
                         {!isSelf && <DeleteUserButton userId={u.id} name={u.full_name} />}
                       </div>
                     </td>
@@ -223,6 +228,14 @@ export function UsersTable({
           user={editingUser}
           open={!!editingUser}
           onOpenChange={(open) => !open && setEditingUser(null)}
+        />
+      )}
+
+      {activityUser && (
+        <UserActivityDialog
+          user={activityUser}
+          open={!!activityUser}
+          onOpenChange={(open) => !open && setActivityUser(null)}
         />
       )}
     </div>

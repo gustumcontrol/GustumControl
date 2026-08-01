@@ -27,6 +27,47 @@ export type Database = {
         };
         Relationships: [];
       };
+      activity_log: {
+        Row: {
+          id: string;
+          actor_id: string | null;
+          action: string;
+          entity_type: string | null;
+          entity_id: string | null;
+          description: string;
+          metadata: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          actor_id?: string | null;
+          action: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          description: string;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          actor_id?: string | null;
+          action?: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          description?: string;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       board_plans: {
         Row: {
           name: string;
@@ -559,6 +600,7 @@ export type ReservationHistory =
   Database["public"]["Tables"]["reservation_history"]["Row"];
 export type CleaningLogEntry = Database["public"]["Tables"]["cleaning_log"]["Row"];
 export type MaintenanceIssue = Database["public"]["Tables"]["maintenance_issues"]["Row"];
+export type ActivityLogEntry = Database["public"]["Tables"]["activity_log"]["Row"];
 export type RoomStaffAssignment =
   Database["public"]["Tables"]["room_staff_assignments"]["Row"];
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];

@@ -33,6 +33,7 @@ const ADMINISTRACION: NavCategory = {
   category: 'Administración',
   items: [
     { href: '/analiticas', label: 'Analíticas', icon: 'chart-line' },
+    { href: '/actividades', label: 'Actividades', icon: 'list-check' },
     { href: '/usuarios', label: 'Usuarios', icon: 'users' },
   ],
 };
