@@ -1,6 +1,7 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
+import { Icon } from '@/components/icon';
 import { updateCleaningStatus } from '@/lib/actions/cleaning';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import type { CleaningStatus } from '@/lib/types';
@@ -17,19 +18,99 @@ const NEXT_STATUS: Record<string, CleaningStatus> = {
   'EN PROCESO': 'LIMPIADO',
 };
 
-const NEXT_LABEL: Record<string, string> = {
-  PENDIENTE: 'Empezar limpieza',
-  'EN PROCESO': 'Marcar limpiado',
+const STATUS_LABEL: Record<string, string> = {
+  PENDIENTE: 'Pendiente',
+  'EN PROCESO': 'En proceso',
 };
 
-const BUTTON_COLOR: Record<string, string> = {
-  PENDIENTE: '#eab308',
-  'EN PROCESO': '#16a34a',
+const STATUS_META: Record<string, { bg: string; fg: string; cta: string; icon?: string }> = {
+  PENDIENTE: {
+    bg: 'rgb(255 159 10 / 16%)',
+    fg: '#d97706',
+    cta: 'Empezar limpieza',
+    icon: 'broom',
+  },
+  'EN PROCESO': {
+    bg: 'rgb(139 247 179 / 18%)',
+    fg: '#16a34a',
+    cta: 'Confirmar limpieza',
+    icon: 'check',
+  },
 };
+
+const FLOOR_ORDINALS: Record<string, string> = {
+  '1': 'Primera planta',
+  '2': 'Segunda planta',
+  '3': 'Tercera planta',
+  '4': 'Cuarta planta',
+  '5': 'Quinta planta',
+  '6': 'Sexta planta',
+  '7': 'Séptima planta',
+  '8': 'Octava planta',
+  '9': 'Novena planta',
+  '10': 'Décima planta',
+};
+
+function floorLabel(floor: string | undefined) {
+  if (!floor) return '—';
+  return FLOOR_ORDINALS[floor] ?? `Planta ${floor}`;
+}
+
+function TaskRow({
+  task,
+  isPending,
+  onAdvance,
+}: {
+  task: CleaningTask;
+  isPending: boolean;
+  onAdvance: () => void;
+}) {
+  const meta = STATUS_META[task.cleaning_status] ?? STATUS_META.PENDIENTE;
+
+  return (
+    <div
+      className="rounded-xl p-4 flex items-center gap-4"
+      style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
+    >
+      <div className="flex items-start gap-3 min-w-0 flex-1">
+        <div className="shrink-0 w-28">
+          <p className="text-sm leading-5 font-semibold truncate" style={{ color: 'var(--light)' }}>
+            Hab. {task.room?.number ?? '—'}
+          </p>
+          <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
+            {floorLabel(task.room?.floor)}
+          </p>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm leading-5 font-medium truncate" style={{ color: 'var(--light)' }}>
+            {task.guest_name}
+          </p>
+          <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
+            {STATUS_LABEL[task.cleaning_status] ?? task.cleaning_status}
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={onAdvance}
+        className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+        style={{ background: meta.bg, color: meta.fg }}
+      >
+        {meta.icon && !isPending && (
+          <Icon name={meta.icon} style="solid" size={12} color={meta.fg} />
+        )}
+        {isPending ? 'Actualizando...' : meta.cta}
+      </button>
+    </div>
+  );
+}
 
 export function CleaningTaskList({ tasks }: { tasks: CleaningTask[] }) {
   useRealtimeRefresh(['reservations', 'cleaning_log']);
-  const [isPending, startTransition] = useTransition();
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
 
   if (tasks.length === 0) {
     return (
@@ -42,40 +123,22 @@ export function CleaningTaskList({ tasks }: { tasks: CleaningTask[] }) {
   const handleAdvance = (id: string, current: string) => {
     const next = NEXT_STATUS[current];
     if (!next) return;
-    startTransition(() => {
-      void updateCleaningStatus(id, next);
+    setPendingId(id);
+    startTransition(async () => {
+      await updateCleaningStatus(id, next);
+      setPendingId(null);
     });
   };
 
   return (
     <div className="flex flex-col gap-3">
       {tasks.map((task) => (
-        <div
+        <TaskRow
           key={task.id}
-          className="rounded-lg p-4 flex items-center justify-between gap-4"
-          style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
-        >
-          <div>
-            <p className="text-lg font-semibold" style={{ color: 'var(--light)' }}>
-              Hab. {task.room?.number ?? '—'}
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-              {task.guest_name} · {task.cleaning_status}
-            </p>
-          </div>
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => handleAdvance(task.id, task.cleaning_status)}
-            className="px-4 py-3 rounded-lg text-sm font-medium cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-            style={{
-              background: BUTTON_COLOR[task.cleaning_status] ?? 'var(--accent-c)',
-              color: 'var(--accent-ink)',
-            }}
-          >
-            {NEXT_LABEL[task.cleaning_status] ?? 'Actualizar'}
-          </button>
-        </div>
+          task={task}
+          isPending={pendingId === task.id}
+          onAdvance={() => handleAdvance(task.id, task.cleaning_status)}
+        />
       ))}
     </div>
   );

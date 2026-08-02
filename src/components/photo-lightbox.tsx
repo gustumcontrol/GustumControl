@@ -19,12 +19,18 @@ export function PhotoLightbox({
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        // Captura antes que el listener de Escape del Dialog de fondo, para
+        // que solo se cierre la foto y no también el modal que la contiene.
+        e.stopPropagation();
+        e.preventDefault();
+        onClose();
+      }
       if (e.key === 'ArrowLeft') goPrev();
       if (e.key === 'ArrowRight') goNext();
     };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    window.addEventListener('keydown', handleKey, true);
+    return () => window.removeEventListener('keydown', handleKey, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, photos.length]);
 

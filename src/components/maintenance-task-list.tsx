@@ -23,9 +23,14 @@ const NEXT_STATUS: Record<string, Exclude<MaintenanceStatus, 'NO'>> = {
   'EN PROCESO': 'REALIZADO',
 };
 
-const STATUS_META: Record<string, { accent: string; cta: string }> = {
-  PENDIENTE: { accent: '#d97706', cta: 'Empezar' },
-  'EN PROCESO': { accent: '#2563eb', cta: 'Marcar realizado' },
+const STATUS_META: Record<string, { bg: string; fg: string; cta: string; icon?: string }> = {
+  PENDIENTE: { bg: 'rgb(250 204 21 / 20%)', fg: '#a16207', cta: 'Empezar', icon: 'play' },
+  'EN PROCESO': {
+    bg: 'rgb(139 247 179 / 18%)',
+    fg: '#16a34a',
+    cta: 'Marcar realizado',
+    icon: 'check',
+  },
 };
 
 const FLOOR_ORDINALS: Record<string, string> = {
@@ -140,8 +145,11 @@ function IssueRow({
         }}
         disabled={isPending}
         className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-        style={{ background: meta.accent, color: '#FFFFFF' }}
+        style={{ background: meta.bg, color: meta.fg }}
       >
+        {meta.icon && !isPending && (
+          <Icon name={meta.icon} style="solid" size={12} color={meta.fg} />
+        )}
         {isPending ? 'Actualizando...' : meta.cta}
       </button>
     </div>
