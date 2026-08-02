@@ -15,7 +15,7 @@ export default async function LimpiezaPage() {
   }));
 
   return (
-    <div>
+    <div className="lg:max-w-4xl lg:mx-auto">
       <h1 className="text-2xl font-semibold mb-6" style={{ color: 'var(--light)' }}>
         Limpieza pendiente
       </h1>

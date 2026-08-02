@@ -6,6 +6,7 @@ import type { SheetData } from 'write-excel-file/browser';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/icon';
+import { PhotoLightbox } from '@/components/photo-lightbox';
 import {
   Dialog,
   DialogContent,
@@ -22,7 +23,7 @@ import { todayISOInHotelTimezone } from '@/lib/date';
 export type MaintenanceIssueHistoryRow = {
   id: string;
   description: string;
-  photo_url: string | null;
+  photo_urls: string[];
   opened_at: string;
   closed_at: string | null;
   opened_by_name: string | null;
@@ -88,34 +89,89 @@ function IssueDetailDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const durationMs = issue.closed_at
+    ? new Date(issue.closed_at).getTime() - new Date(issue.opened_at).getTime()
+    : null;
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const steps = [
+    { label: 'Se reportó la incidencia', at: issue.opened_at, by: issue.opened_by_name },
+    ...(issue.closed_at
+      ? [{ label: 'Se resolvió la incidencia', at: issue.closed_at, by: issue.closed_by_name }]
+      : []),
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Habitación {issue.room?.number ?? '—'}</DialogTitle>
-          <DialogDescription>{issue.description}</DialogDescription>
+          <DialogDescription>
+            {durationMs != null
+              ? `Incidencia resuelta · duró ${formatDuration(durationMs)}`
+              : 'Incidencia todavía sin resolver.'}
+          </DialogDescription>
         </DialogHeader>
 
-        {issue.photo_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={issue.photo_url}
-            alt="Foto de la incidencia"
-            className="rounded-lg max-h-80 w-full object-cover"
+        {issue.photo_urls.length > 0 && (
+          <div className="grid grid-cols-3 gap-2">
+            {issue.photo_urls.map((url, i) => (
+              <button
+                key={url}
+                type="button"
+                onClick={() => setLightboxIndex(i)}
+                className="block cursor-pointer"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt="Foto de la incidencia"
+                  className="rounded-lg h-24 w-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {lightboxIndex !== null && (
+          <PhotoLightbox
+            photos={issue.photo_urls}
+            index={lightboxIndex}
+            onIndexChange={setLightboxIndex}
+            onClose={() => setLightboxIndex(null)}
           />
         )}
 
-        <div className="flex flex-col gap-1 text-sm" style={{ color: 'var(--text-2)' }}>
-          <p>
-            Reportada {issue.opened_by_name ? `por ${issue.opened_by_name} ` : ''}el{' '}
-            {new Date(issue.opened_at).toLocaleString()}
-          </p>
-          {issue.closed_at && (
-            <p>
-              Realizada {issue.closed_by_name ? `por ${issue.closed_by_name} ` : ''}el{' '}
-              {new Date(issue.closed_at).toLocaleString()}
-            </p>
-          )}
+        <p className="text-sm" style={{ color: 'var(--text-2)' }}>
+          {issue.description}
+        </p>
+
+        <div className="flex flex-col">
+          {steps.map((step, i) => {
+            const isLast = i === steps.length - 1;
+            return (
+              <div key={step.label} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0 mt-1"
+                    style={{ background: 'var(--accent-c)' }}
+                  />
+                  {!isLast && (
+                    <span className="w-px flex-1" style={{ background: 'var(--line-2)' }} />
+                  )}
+                </div>
+                <div className={isLast ? '' : 'pb-4'}>
+                  <p className="text-sm font-medium" style={{ color: 'var(--light)' }}>
+                    {step.label}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                    {new Date(step.at).toLocaleString()}
+                    {step.by ? ` · ${step.by}` : ''}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </DialogContent>
     </Dialog>
@@ -283,7 +339,7 @@ export function MaintenanceIssuesHistoryList({
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--line)' }}>
-                {['Habitación', 'Descripción', 'Reportada', 'Realizada', 'Realizada por'].map(
+                {['Habitación', 'Descripción', 'Reportada', 'Realizada', 'Duración', 'Realizada por'].map(
                   (h) => (
                     <th
                       key={h}
@@ -315,6 +371,11 @@ export function MaintenanceIssuesHistoryList({
                   </td>
                   <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
                     {i.closed_at ? new Date(i.closed_at).toLocaleString() : '—'}
+                  </td>
+                  <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
+                    {i.closed_at
+                      ? formatDuration(new Date(i.closed_at).getTime() - new Date(i.opened_at).getTime())
+                      : '—'}
                   </td>
                   <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
                     {i.closed_by_name ?? '—'}

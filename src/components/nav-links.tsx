@@ -9,7 +9,7 @@ export function NavLinks({
   variant = 'top',
   collapsed = false,
 }: {
-  items: { href: string; label: string; icon?: string }[];
+  items: { href: string; label: string; icon?: string; count?: number }[];
   variant?: 'top' | 'mobile' | 'sidebar';
   collapsed?: boolean;
 }) {
@@ -54,11 +54,26 @@ export function NavLinks({
                 />
               )}
               <span
-                className="overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out"
+                className="overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-300 ease-in-out"
                 style={{ maxWidth: collapsed ? 0 : 160, opacity: collapsed ? 0 : 1 }}
               >
                 {item.label}
               </span>
+              {item.count !== undefined && (
+                <span
+                  className="ml-auto shrink-0 min-w-[1.25rem] h-5 px-1.5 rounded-full text-xs font-semibold flex items-center justify-center overflow-hidden transition-all duration-300 ease-in-out"
+                  style={{
+                    background: active ? 'var(--accent-c)' : 'var(--raised)',
+                    color: active ? 'var(--accent-ink)' : 'var(--text-2)',
+                    maxWidth: collapsed ? 0 : '2rem',
+                    opacity: collapsed ? 0 : 1,
+                    paddingLeft: collapsed ? 0 : undefined,
+                    paddingRight: collapsed ? 0 : undefined,
+                  }}
+                >
+                  {item.count}
+                </span>
+              )}
             </Link>
           );
         }

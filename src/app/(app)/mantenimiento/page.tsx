@@ -8,7 +8,7 @@ export default async function MantenimientoPage() {
     supabase
       .from('maintenance_issues')
       .select(
-        'id, room_id, description, photo_url, status, opened_at, rooms(number, floor), opened_by_profile:profiles!maintenance_issues_opened_by_fkey(full_name)'
+        'id, room_id, description, photo_urls, status, opened_at, rooms(number, floor), opened_by_profile:profiles!maintenance_issues_opened_by_fkey(full_name)'
       )
       .neq('status', 'REALIZADO')
       .order('opened_at', { ascending: true }),
@@ -27,7 +27,7 @@ export default async function MantenimientoPage() {
   const availableRooms = (rooms ?? []).filter((r) => !roomsAlreadyInMaintenance.has(r.id));
 
   return (
-    <div>
+    <div className="lg:max-w-5xl lg:mx-auto">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="text-2xl font-semibold" style={{ color: 'var(--light)' }}>
           Mantenimiento pendiente

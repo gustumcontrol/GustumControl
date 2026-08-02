@@ -104,7 +104,32 @@ export default async function AppLayout({
   }
 
   const role = (profile?.role as Role) ?? 'recepcion';
-  const navCategories = NAV_BY_ROLE[role] ?? [];
+
+  const [reservasCount, limpiezaCount, mantenimientoCount] = await Promise.all([
+    supabase.from('reservations').select('id', { count: 'exact', head: true }).eq('status', 'ACTIVA'),
+    supabase
+      .from('reservations')
+      .select('id', { count: 'exact', head: true })
+      .in('cleaning_status', ['PENDIENTE', 'EN PROCESO']),
+    supabase
+      .from('maintenance_issues')
+      .select('id', { count: 'exact', head: true })
+      .neq('status', 'REALIZADO'),
+  ]);
+
+  const COUNT_BY_HREF: Record<string, number> = {
+    '/reservas': reservasCount.count ?? 0,
+    '/limpieza': limpiezaCount.count ?? 0,
+    '/mantenimiento': mantenimientoCount.count ?? 0,
+  };
+
+  const navCategories = (NAV_BY_ROLE[role] ?? []).map((cat) => ({
+    ...cat,
+    items: cat.items.map((item) => ({
+      ...item,
+      count: COUNT_BY_HREF[item.href],
+    })),
+  }));
   const navFlat = navCategories.flatMap((c) => c.items);
   const displayName = profile?.full_name ?? user.email ?? '';
   const initial = displayName.trim().charAt(0).toUpperCase();

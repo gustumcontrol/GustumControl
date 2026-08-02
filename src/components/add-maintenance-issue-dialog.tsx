@@ -23,7 +23,7 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
   const [open, setOpen] = useState(false);
   const [roomId, setRoomId] = useState('');
   const [description, setDescription] = useState('');
-  const [photo, setPhoto] = useState<File | null>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
   const [error, setError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -31,7 +31,7 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
   const reset = () => {
     setRoomId('');
     setDescription('');
-    setPhoto(null);
+    setPhotos([]);
     setError('');
   };
 
@@ -48,27 +48,32 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
       return;
     }
 
-    let photoUrl: string | undefined;
+    const photoUrls: string[] = [];
 
-    if (photo) {
+    if (photos.length > 0) {
       setIsUploading(true);
-      const ext = photo.name.split('.').pop();
-      const path = `${roomId}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from('maintenance-photos')
-        .upload(path, photo);
-      setIsUploading(false);
+      for (const photo of photos) {
+        const ext = photo.name.split('.').pop();
+        const path = `${roomId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('maintenance-photos')
+          .upload(path, photo);
 
-      if (uploadError) {
-        setError(`No se pudo subir la foto: ${uploadError.message}`);
-        return;
+        if (uploadError) {
+          setIsUploading(false);
+          setError(`No se pudo subir la foto: ${uploadError.message}`);
+          return;
+        }
+
+        photoUrls.push(
+          supabase.storage.from('maintenance-photos').getPublicUrl(path).data.publicUrl
+        );
       }
-
-      photoUrl = supabase.storage.from('maintenance-photos').getPublicUrl(path).data.publicUrl;
+      setIsUploading(false);
     }
 
     startTransition(async () => {
-      const result = await openMaintenanceIssue(roomId, description.trim(), photoUrl);
+      const result = await openMaintenanceIssue(roomId, description.trim(), photoUrls);
       if (result?.error) {
         setError(result.error);
         return;
@@ -127,15 +132,22 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="issue-photo">Foto (opcional)</Label>
+            <Label htmlFor="issue-photo">Fotos (opcional)</Label>
             <input
               id="issue-photo"
               type="file"
               accept="image/*"
-              onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+              multiple
+              onChange={(e) => setPhotos(Array.from(e.target.files ?? []))}
               className="text-sm cursor-pointer"
               style={{ color: 'var(--text-2)' }}
             />
+            {photos.length > 0 && (
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                {photos.length} foto{photos.length === 1 ? '' : 's'} seleccionada
+                {photos.length === 1 ? '' : 's'}.
+              </p>
+            )}
           </div>
 
           <DialogFooter>

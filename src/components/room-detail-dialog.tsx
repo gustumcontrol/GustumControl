@@ -13,10 +13,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { StatusBadge } from '@/components/status-badge';
 import { closeReservation } from '@/lib/actions/reservations';
 import { assignRoomToStaff, releaseStaffRoom } from '@/lib/actions/staff-assignments';
+import { openMaintenanceIssue } from '@/lib/actions/maintenance';
+import { supabase } from '@/lib/supabase/client';
 import type { RoomStatus, ComputedRoomStatus } from '@/lib/types';
+
+type Mode = 'none' | 'assign' | 'report-issue';
 
 export function RoomDetailDialog({
   room,
@@ -28,17 +33,22 @@ export function RoomDetailDialog({
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
-  const [assigning, setAssigning] = useState(false);
+  const [mode, setMode] = useState<Mode>('none');
   const [staffName, setStaffName] = useState('');
   const [staffNotes, setStaffNotes] = useState('');
+  const [issueDescription, setIssueDescription] = useState('');
+  const [issuePhotos, setIssuePhotos] = useState<File[]>([]);
+  const [issueUploading, setIssueUploading] = useState(false);
 
   const status = room.computed_status as ComputedRoomStatus;
   const isFuture = status === 'RESERVADA';
 
-  const resetAssignForm = () => {
-    setAssigning(false);
+  const resetForms = () => {
+    setMode('none');
     setStaffName('');
     setStaffNotes('');
+    setIssueDescription('');
+    setIssuePhotos([]);
   };
 
   const handleClose = () => {
@@ -66,7 +76,7 @@ export function RoomDetailDialog({
         setError(result.error);
         return;
       }
-      resetAssignForm();
+      resetForms();
       setOpen(false);
     });
   };
@@ -84,13 +94,60 @@ export function RoomDetailDialog({
     });
   };
 
+  const handleReportIssue = () => {
+    if (!issueDescription.trim()) {
+      setError('Falta describir qué le pasa a la habitación.');
+      return;
+    }
+    setError('');
+    startTransition(async () => {
+      const photoUrls: string[] = [];
+
+      if (issuePhotos.length > 0) {
+        setIssueUploading(true);
+        for (const photo of issuePhotos) {
+          const ext = photo.name.split('.').pop();
+          const path = `${room.room_id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from('maintenance-photos')
+            .upload(path, photo);
+
+          if (uploadError) {
+            setIssueUploading(false);
+            setError(`No se pudo subir la foto: ${uploadError.message}`);
+            return;
+          }
+
+          photoUrls.push(
+            supabase.storage.from('maintenance-photos').getPublicUrl(path).data.publicUrl
+          );
+        }
+        setIssueUploading(false);
+      }
+
+      const result = await openMaintenanceIssue(
+        room.room_id!,
+        issueDescription.trim(),
+        photoUrls
+      );
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+      resetForms();
+      setOpen(false);
+    });
+  };
+
+  const reportIssueBusy = isPending || issueUploading;
+
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
         setError('');
-        if (!next) resetAssignForm();
+        if (!next) resetForms();
       }}
     >
       <button
@@ -113,7 +170,7 @@ export function RoomDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {assigning ? (
+        {mode === 'assign' ? (
           <div className="flex flex-col gap-3">
             <p className="text-sm" style={{ color: 'var(--text-2)' }}>
               Esta habitación queda bloqueada (no se puede reservar) hasta que la liberes.
@@ -134,6 +191,40 @@ export function RoomDetailDialog({
                 onChange={(e) => setStaffNotes(e.target.value)}
                 placeholder="Ej: departamento, motivo..."
               />
+            </div>
+          </div>
+        ) : mode === 'report-issue' ? (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm" style={{ color: 'var(--text-2)' }}>
+              La habitación quedará bloqueada (no se puede reservar) hasta que se marque como
+              realizada.
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="issue-description">¿Qué le pasa a la habitación?</Label>
+              <Textarea
+                id="issue-description"
+                value={issueDescription}
+                onChange={(e) => setIssueDescription(e.target.value)}
+                placeholder="Ej: aire acondicionado no enfría, gotea el lavamanos..."
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="issue-photo">Fotos (opcional)</Label>
+              <input
+                id="issue-photo"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => setIssuePhotos(Array.from(e.target.files ?? []))}
+                className="text-sm cursor-pointer"
+                style={{ color: 'var(--text-2)' }}
+              />
+              {issuePhotos.length > 0 && (
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                  {issuePhotos.length} foto{issuePhotos.length === 1 ? '' : 's'} seleccionada
+                  {issuePhotos.length === 1 ? '' : 's'}.
+                </p>
+              )}
             </div>
           </div>
         ) : status === 'LIBRE' ? (
@@ -198,49 +289,76 @@ export function RoomDetailDialog({
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <DialogFooter className="sm:flex-col-reverse sm:items-stretch">
-          {assigning ? (
+          {mode === 'assign' ? (
             <>
-              <Button type="button" variant="outline" className="w-full" onClick={resetAssignForm}>
+              <Button type="button" variant="outline" className="w-full" onClick={resetForms}>
                 Cancelar
               </Button>
               <Button className="w-full" onClick={handleAssign} disabled={isPending}>
                 {isPending ? 'Asignando...' : 'Asignar'}
               </Button>
             </>
-          ) : status === 'LIBRE' ? (
+          ) : mode === 'report-issue' ? (
             <>
-              <Button variant="outline" className="w-full" onClick={() => setAssigning(true)}>
-                Asignar a empleado
+              <Button type="button" variant="outline" className="w-full" onClick={resetForms}>
+                Cancelar
               </Button>
-              <Link href={`/reservas/nueva?room=${room.room_id}`} className="w-full">
-                <Button className="w-full">Crear reserva para hoy</Button>
-              </Link>
+              <Button className="w-full" onClick={handleReportIssue} disabled={reportIssueBusy}>
+                {issueUploading
+                  ? 'Subiendo foto...'
+                  : isPending
+                    ? 'Reportando...'
+                    : 'Reportar incidencia'}
+              </Button>
             </>
-          ) : status === 'RESERVADA' ? (
-            <Link href={`/reservas/nueva?room=${room.room_id}`} className="w-full sm:w-auto">
-              <Button className="w-full">Crear reserva para hoy</Button>
-            </Link>
-          ) : status === 'MANTENIMIENTO' ? (
-            <Link href="/mantenimiento" className="w-full sm:w-auto">
-              <Button variant="outline" className="w-full">
-                Ver en Mantenimiento
-              </Button>
-            </Link>
-          ) : status === 'EMPLEADO' ? (
-            <Button variant="outline" onClick={handleRelease} disabled={isPending}>
-              {isPending ? 'Liberando...' : 'Liberar habitación'}
-            </Button>
-          ) : status === 'PENDIENTE LIMPIEZA' ? (
-            <Link href="/limpieza" className="w-full sm:w-auto">
-              <Button variant="outline" className="w-full">
-                Ir a Limpieza
-              </Button>
-            </Link>
-          ) : room.reservation_id ? (
-            <Button variant="outline" onClick={handleClose} disabled={isPending}>
-              {isPending ? 'Cerrando...' : 'Cerrar reserva'}
-            </Button>
-          ) : null}
+          ) : (
+            <>
+              {status !== 'MANTENIMIENTO' && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setMode('report-issue')}
+                >
+                  Reportar incidencia
+                </Button>
+              )}
+
+              {status === 'LIBRE' ? (
+                <>
+                  <Button variant="outline" className="w-full" onClick={() => setMode('assign')}>
+                    Asignar a empleado
+                  </Button>
+                  <Link href={`/reservas/nueva?room=${room.room_id}`} className="w-full">
+                    <Button className="w-full">Crear reserva para hoy</Button>
+                  </Link>
+                </>
+              ) : status === 'RESERVADA' ? (
+                <Link href={`/reservas/nueva?room=${room.room_id}`} className="w-full sm:w-auto">
+                  <Button className="w-full">Crear reserva para hoy</Button>
+                </Link>
+              ) : status === 'MANTENIMIENTO' ? (
+                <Link href="/mantenimiento" className="w-full sm:w-auto">
+                  <Button variant="outline" className="w-full">
+                    Ver en Mantenimiento
+                  </Button>
+                </Link>
+              ) : status === 'EMPLEADO' ? (
+                <Button variant="outline" onClick={handleRelease} disabled={isPending}>
+                  {isPending ? 'Liberando...' : 'Liberar habitación'}
+                </Button>
+              ) : status === 'PENDIENTE LIMPIEZA' ? (
+                <Link href="/limpieza" className="w-full sm:w-auto">
+                  <Button variant="outline" className="w-full">
+                    Ir a Limpieza
+                  </Button>
+                </Link>
+              ) : room.reservation_id ? (
+                <Button variant="outline" onClick={handleClose} disabled={isPending}>
+                  {isPending ? 'Cerrando...' : 'Cerrar reserva'}
+                </Button>
+              ) : null}
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

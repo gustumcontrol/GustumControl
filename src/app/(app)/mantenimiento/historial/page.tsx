@@ -9,7 +9,7 @@ export default async function MantenimientoHistorialPage() {
   const { data } = await supabase
     .from('maintenance_issues')
     .select(
-      'id, description, photo_url, opened_at, closed_at, rooms(number), opened_by_profile:profiles!maintenance_issues_opened_by_fkey(full_name), closed_by_profile:profiles!maintenance_issues_closed_by_fkey(full_name)'
+      'id, description, photo_urls, opened_at, closed_at, rooms(number), opened_by_profile:profiles!maintenance_issues_opened_by_fkey(full_name), closed_by_profile:profiles!maintenance_issues_closed_by_fkey(full_name)'
     )
     .eq('status', 'REALIZADO')
     .order('closed_at', { ascending: false })

@@ -10,6 +10,7 @@ export const ACTION_META: Record<string, { icon: string; color: string; label: s
   maintenance_started: { icon: 'wrench', color: '#2563eb', label: 'Incidencia en proceso' },
   maintenance_resolved: { icon: 'circle-check', color: '#16a34a', label: 'Incidencia resuelta' },
   maintenance_pending: { icon: 'screwdriver-wrench', color: '#a16207', label: 'Incidencia reabierta' },
+  maintenance_edited: { icon: 'pen', color: '#2563eb', label: 'Incidencia editada' },
   staff_room_assigned: { icon: 'user-lock', color: '#0d9488', label: 'Habitación asignada' },
   staff_room_released: { icon: 'lock-open', color: '#0d9488', label: 'Habitación liberada' },
 };

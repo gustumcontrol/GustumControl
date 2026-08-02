@@ -130,7 +130,7 @@ export type Database = {
           id: string;
           room_id: string;
           description: string;
-          photo_url: string | null;
+          photo_urls: string[];
           status: string;
           opened_by: string | null;
           opened_at: string;
@@ -142,7 +142,7 @@ export type Database = {
           id?: string;
           room_id: string;
           description: string;
-          photo_url?: string | null;
+          photo_urls?: string[];
           status?: string;
           opened_by?: string | null;
           opened_at?: string;
@@ -154,7 +154,7 @@ export type Database = {
           id?: string;
           room_id?: string;
           description?: string;
-          photo_url?: string | null;
+          photo_urls?: string[];
           status?: string;
           opened_by?: string | null;
           opened_at?: string;
@@ -568,11 +568,19 @@ export type Database = {
         Returns: undefined;
       };
       open_maintenance_issue: {
-        Args: { p_room_id: string; p_description: string; p_photo_url?: string | null };
+        Args: { p_room_id: string; p_description: string; p_photo_urls?: string[] };
         Returns: string;
       };
       update_maintenance_issue_status: {
         Args: { p_issue_id: string; p_status: string };
+        Returns: undefined;
+      };
+      edit_maintenance_issue: {
+        Args: {
+          p_issue_id: string;
+          p_description?: string | null;
+          p_new_photo_urls?: string[];
+        };
         Returns: undefined;
       };
       assign_room_to_staff: {
@@ -607,7 +615,7 @@ export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 export type RoomStatus = Database["public"]["Views"]["room_status"]["Row"];
 
 export type Role = "recepcion" | "limpieza" | "mantenimiento" | "admin";
-export type NavItem = { href: string; label: string; icon: string };
+export type NavItem = { href: string; label: string; icon: string; count?: number };
 export type NavCategory = { category: string; items: NavItem[] };
 export type UserStatus = "active" | "inactive" | "suspended";
 export type CleaningStatus = "NO" | "PENDIENTE" | "EN PROCESO" | "LIMPIADO";
