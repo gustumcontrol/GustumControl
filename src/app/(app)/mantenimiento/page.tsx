@@ -27,7 +27,7 @@ export default async function MantenimientoPage() {
   const availableRooms = (rooms ?? []).filter((r) => !roomsAlreadyInMaintenance.has(r.id));
 
   return (
-    <div className="lg:max-w-5xl lg:mx-auto">
+    <div className="lg:max-w-4xl lg:mx-auto">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="text-2xl font-semibold" style={{ color: 'var(--light)' }}>
           Mantenimiento pendiente
