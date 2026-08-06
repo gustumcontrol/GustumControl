@@ -1,18 +1,32 @@
+import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { MaintenanceTaskList, type MaintenanceIssueRow } from '@/components/maintenance-task-list';
 import { AddMaintenanceIssueDialog } from '@/components/add-maintenance-issue-dialog';
+import { getHotelContext } from '@/lib/hotel-context';
+import { sortByRoomNumber } from '@/lib/sort-rooms';
 
 export default async function MantenimientoPage() {
+  const { hotelId, isAdmin } = await getHotelContext();
+
+  if (isAdmin && !hotelId) {
+    redirect('/hoteles');
+  }
+
   const supabase = await createSupabaseServerClient();
   const [{ data: issues }, { data: rooms }] = await Promise.all([
     supabase
       .from('maintenance_issues')
       .select(
-        'id, room_id, description, photo_urls, status, opened_at, rooms(number, floor), opened_by_profile:profiles!maintenance_issues_opened_by_fkey(full_name)'
+        'id, room_id, description, photo_urls, status, priority, opened_at, rooms(number, floor), opened_by_profile:profiles!maintenance_issues_opened_by_fkey(full_name)'
       )
+      .eq('hotel_id', hotelId!)
       .neq('status', 'REALIZADO')
       .order('opened_at', { ascending: true }),
-    supabase.from('rooms').select('id, number, floor, type').eq('active', true).order('number'),
+    supabase
+      .from('rooms')
+      .select('id, number, floor, type')
+      .eq('hotel_id', hotelId!)
+      .eq('active', true),
   ]);
 
   const tasks: MaintenanceIssueRow[] = (issues ?? []).map((i) => ({
@@ -24,7 +38,9 @@ export default async function MantenimientoPage() {
   }));
 
   const roomsAlreadyInMaintenance = new Set(tasks.map((t) => t.room_id));
-  const availableRooms = (rooms ?? []).filter((r) => !roomsAlreadyInMaintenance.has(r.id));
+  const availableRooms = sortByRoomNumber(
+    (rooms ?? []).filter((r) => !roomsAlreadyInMaintenance.has(r.id))
+  );
 
   return (
     <div className="lg:max-w-4xl lg:mx-auto">

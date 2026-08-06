@@ -1,9 +1,17 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { ReservationList, type ReservationRow } from '@/components/reservation-list';
 import { Button } from '@/components/ui/button';
+import { getHotelContext } from '@/lib/hotel-context';
 
 export default async function ReservasPage() {
+  const { hotelId, isAdmin } = await getHotelContext();
+
+  if (isAdmin && !hotelId) {
+    redirect('/hoteles');
+  }
+
   const supabase = await createSupabaseServerClient();
   const [{ data }, { data: roomTypes }, { data: boardPlans }] = await Promise.all([
     supabase
@@ -11,6 +19,7 @@ export default async function ReservasPage() {
       .select(
         'id, guest_name, guests_count, check_in, check_out, nights, total, price_per_night, phone, country, municipio, provincia, board_plan, payment_method, notes, cleaning_status, maintenance_status, rooms(number, floor, type)'
       )
+      .eq('hotel_id', hotelId!)
       .eq('status', 'ACTIVA')
       .order('created_at', { ascending: false }),
     supabase.from('room_types').select('*'),

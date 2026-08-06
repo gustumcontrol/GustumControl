@@ -1,16 +1,25 @@
+import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import {
   MaintenanceIssuesHistoryList,
   type MaintenanceIssueHistoryRow,
 } from '@/components/maintenance-issues-history-list';
+import { getHotelContext } from '@/lib/hotel-context';
 
 export default async function MantenimientoHistorialPage() {
+  const { hotelId, isAdmin } = await getHotelContext();
+
+  if (isAdmin && !hotelId) {
+    redirect('/hoteles');
+  }
+
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('maintenance_issues')
     .select(
       'id, description, photo_urls, opened_at, closed_at, rooms(number), opened_by_profile:profiles!maintenance_issues_opened_by_fkey(full_name), closed_by_profile:profiles!maintenance_issues_closed_by_fkey(full_name)'
     )
+    .eq('hotel_id', hotelId!)
     .eq('status', 'REALIZADO')
     .order('closed_at', { ascending: false })
     .limit(500);

@@ -16,6 +16,7 @@ import {
   Legend,
 } from 'recharts';
 import { Icon } from '@/components/icon';
+import { COUNTRIES } from '@/lib/countries';
 import type { AnalyticsSummary } from '@/lib/analytics';
 
 const PALETTE = ['#FF6B2B', '#2563eb', '#16a34a', '#9333ea', '#0d9488', '#d97706', '#dc2626'];
@@ -72,6 +73,64 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
         {title}
       </h3>
       {children}
+    </div>
+  );
+}
+
+function CountryList({ countries }: { countries: { name: string; value: number }[] }) {
+  const max = Math.max(...countries.map((c) => c.value), 1);
+
+  return (
+    <div className="flex flex-col gap-4">
+      {countries.map((c) => {
+        const country = COUNTRIES.find((entry) => entry.code === c.name);
+        const label = country?.name ?? c.name;
+        const pct = Math.round((c.value / max) * 100);
+
+        return (
+          <div key={c.name} className="flex items-center gap-3">
+            <span
+              className="w-9 h-9 rounded-lg overflow-hidden shrink-0 flex items-center justify-center"
+              style={{ background: 'var(--raised)' }}
+            >
+              {country ? (
+                <span
+                  className={`fi fi-${country.code.toLowerCase()}`}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    height: '100%',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                />
+              ) : (
+                <Icon name="globe" style="duotone" size={16} color="var(--text-3)" />
+              )}
+            </span>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-sm font-semibold" style={{ color: 'var(--light)' }}>
+                  {c.value}
+                </span>
+                <span className="text-xs shrink-0" style={{ color: 'var(--text-3)' }}>
+                  {label}
+                </span>
+              </div>
+              <div
+                className="h-1.5 rounded-full mt-1.5 overflow-hidden"
+                style={{ background: 'var(--line-2)' }}
+              >
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${pct}%`, background: 'var(--accent-c)' }}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -205,9 +264,12 @@ export function AnalyticsDashboard({ summary }: { summary: AnalyticsSummary }) {
 
         <ChartCard title="Métodos de pago">
           {summary.paymentMethods.length === 0 ? (
-            <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-              Sin datos todavía.
-            </p>
+            <div className="flex flex-col items-center gap-2 py-14 text-center">
+              <Icon name="chart-pie" style="duotone" size={30} color="var(--text-3)" />
+              <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+                Sin datos todavía.
+              </p>
+            </div>
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
@@ -235,19 +297,14 @@ export function AnalyticsDashboard({ summary }: { summary: AnalyticsSummary }) {
 
         <ChartCard title="Origen de los huéspedes">
           {summary.topCountries.length === 0 ? (
-            <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-              Sin datos todavía.
-            </p>
+            <div className="flex flex-col items-center gap-2 py-14 text-center">
+              <Icon name="globe" style="duotone" size={30} color="var(--text-3)" />
+              <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+                Sin datos todavía.
+              </p>
+            </div>
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={summary.topCountries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-3)' }} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--text-3)' }} width={30} allowDecimals={false} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(v) => [num(v), 'Reservas']} />
-                <Bar dataKey="value" fill="#0d9488" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <CountryList countries={summary.topCountries} />
           )}
         </ChartCard>
       </div>
@@ -285,9 +342,12 @@ export function AnalyticsDashboard({ summary }: { summary: AnalyticsSummary }) {
 
       <ChartCard title="Rendimiento por empleado">
         {summary.staffPerformance.length === 0 ? (
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-            Todavía no hay actividad registrada por empleado.
-          </p>
+          <div className="flex flex-col items-center gap-2 py-14 text-center">
+            <Icon name="users" style="duotone" size={30} color="var(--text-3)" />
+            <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+              Todavía no hay actividad registrada por empleado.
+            </p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

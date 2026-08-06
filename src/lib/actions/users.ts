@@ -3,29 +3,40 @@
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getHotelContext } from '@/lib/hotel-context';
 import type { Role, UserStatus } from '@/lib/types';
 
 async function assertAdmin() {
+  const { role, hotelId } = await getHotelContext();
+
+  if (!role) {
+    throw new Error('No autenticado');
+  }
+  if (role !== 'admin') {
+    throw new Error('Solo un admin puede hacer esto');
+  }
+  if (!hotelId) {
+    throw new Error('Elige un hotel primero.');
+  }
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    throw new Error('No autenticado');
-  }
+  // getHotelContext() ya confirmó que hay sesión de admin; user no debería
+  // ser null acá, pero TypeScript no lo sabe.
+  return { user: user!, hotelId };
+}
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    throw new Error('Solo un admin puede hacer esto');
-  }
-
-  return user;
+// updateUserProfile/updateUserStatus/deleteUser usan supabaseAdmin (service
+// role, bypasea RLS) para poder editar cuentas de auth.users además del
+// perfil, así que tienen que validar a mano que el usuario objetivo sea del
+// hotel que el admin tiene activo — si no, un admin viendo un hotel podría
+// tocar cuentas de otro hotel sin que RLS lo detenga.
+async function getTargetUserHotelId(userId: string) {
+  const { data } = await supabaseAdmin.from('profiles').select('hotel_id').eq('id', userId).single();
+  return data?.hotel_id ?? null;
 }
 
 export type CreateUserInput = {
@@ -38,8 +49,9 @@ export type CreateUserInput = {
 };
 
 export async function adminCreateUser(input: CreateUserInput) {
+  let caller;
   try {
-    await assertAdmin();
+    caller = await assertAdmin();
   } catch (e) {
     return { error: (e as Error).message };
   }
@@ -52,6 +64,7 @@ export async function adminCreateUser(input: CreateUserInput) {
       full_name: `${input.firstName.trim()} ${input.lastName.trim()}`,
       role: input.role,
       department: input.department || null,
+      hotel_id: caller.hotelId,
     },
   });
 
@@ -64,7 +77,7 @@ export async function adminCreateUser(input: CreateUserInput) {
   if (data.user) {
     await supabaseAdmin
       .from('profiles')
-      .update({ role: input.role, department: input.department || null })
+      .update({ role: input.role, department: input.department || null, hotel_id: caller.hotelId })
       .eq('id', data.user.id);
   }
 
@@ -82,10 +95,16 @@ export type UpdateUserInput = {
 };
 
 export async function updateUserProfile(input: UpdateUserInput) {
+  let caller;
   try {
-    await assertAdmin();
+    caller = await assertAdmin();
   } catch (e) {
     return { error: (e as Error).message };
+  }
+
+  const targetHotel = await getTargetUserHotelId(input.userId);
+  if (targetHotel !== caller.hotelId) {
+    return { error: 'No autorizado.' };
   }
 
   const fullName = `${input.firstName.trim()} ${input.lastName.trim()}`;
@@ -124,8 +143,13 @@ export async function updateUserStatus(userId: string, status: UserStatus) {
     return { error: (e as Error).message };
   }
 
-  if (caller.id === userId && status !== 'active') {
+  if (caller.user.id === userId && status !== 'active') {
     return { error: 'No puedes desactivar tu propia cuenta.' };
+  }
+
+  const targetHotel = await getTargetUserHotelId(userId);
+  if (targetHotel !== caller.hotelId) {
+    return { error: 'No autorizado.' };
   }
 
   const { error } = await supabaseAdmin.from('profiles').update({ status }).eq('id', userId);
@@ -146,8 +170,13 @@ export async function deleteUser(userId: string) {
     return { error: (e as Error).message };
   }
 
-  if (caller.id === userId) {
+  if (caller.user.id === userId) {
     return { error: 'No puedes borrar tu propia cuenta.' };
+  }
+
+  const targetHotel = await getTargetUserHotelId(userId);
+  if (targetHotel !== caller.hotelId) {
+    return { error: 'No autorizado.' };
   }
 
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);

@@ -2,27 +2,22 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { AnalyticsDashboard } from '@/components/analytics-dashboard';
 import { buildAnalytics } from '@/lib/analytics';
+import { getHotelContext } from '@/lib/hotel-context';
 
 export default async function AnaliticasPage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+  const { role, hotelId } = await getHotelContext();
 
-  if (!user) {
+  if (!role) {
     redirect('/login');
   }
-
-  const { data: callerProfile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (callerProfile?.role !== 'admin') {
+  if (role !== 'admin') {
     redirect('/dashboard');
   }
+  if (!hotelId) {
+    redirect('/hoteles');
+  }
+
+  const supabase = await createSupabaseServerClient();
 
   const [
     { data: history },
@@ -33,19 +28,33 @@ export default async function AnaliticasPage() {
     { data: profiles },
     { data: cleaningLog },
   ] = await Promise.all([
-    supabase.from('reservation_history').select('*').order('check_in', { ascending: false }),
+    supabase
+      .from('reservation_history')
+      .select('*')
+      .eq('hotel_id', hotelId)
+      .order('check_in', { ascending: false }),
     supabase
       .from('reservations')
       .select(
         'id, check_in, nights, total, price_per_night, payment_method, country, created_by, rooms(number, floor, type)'
-      ),
-    supabase.from('room_status').select('room_id, computed_status'),
+      )
+      .eq('hotel_id', hotelId),
+    supabase.from('room_status').select('room_id, computed_status').eq('hotel_id', hotelId),
     supabase
       .from('maintenance_issues')
-      .select('id, status, opened_at, opened_by, closed_at, closed_by'),
-    supabase.from('room_staff_assignments').select('id, released_at').is('released_at', null),
-    supabase.from('profiles').select('id, full_name, role').eq('status', 'active'),
-    supabase.from('cleaning_log').select('status, changed_by'),
+      .select('id, status, opened_at, opened_by, closed_at, closed_by')
+      .eq('hotel_id', hotelId),
+    supabase
+      .from('room_staff_assignments')
+      .select('id, released_at')
+      .eq('hotel_id', hotelId)
+      .is('released_at', null),
+    supabase
+      .from('profiles')
+      .select('id, full_name, role')
+      .eq('hotel_id', hotelId)
+      .eq('status', 'active'),
+    supabase.from('cleaning_log').select('status, changed_by').eq('hotel_id', hotelId),
   ]);
 
   const totalRooms = roomStatuses?.length ?? 0;

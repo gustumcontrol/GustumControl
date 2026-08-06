@@ -17,11 +17,12 @@ export async function getUserActivity(userId: string): Promise<ActivityLogEntry[
 
 export type ActivityWithActor = ActivityLogEntry & { actor_name: string };
 
-export async function getAllActivity(): Promise<ActivityWithActor[]> {
+export async function getAllActivity(hotelId: string): Promise<ActivityWithActor[]> {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('activity_log')
     .select('*, profiles(full_name)')
+    .eq('hotel_id', hotelId)
     .order('created_at', { ascending: false })
     .limit(5000);
 

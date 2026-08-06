@@ -3,6 +3,28 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { DEFAULT_ROUTE_BY_ROLE } from '@/lib/roles';
 import type { Role } from '@/lib/types';
 
+// El proxy corre en runtime de Node.js (no Edge) en este fork de Next.js,
+// así que este módulo se mantiene "caliente" entre requests: cachear acá
+// evita pegarle a Supabase por maintenance_mode en cada navegación, que es
+// el mayor cuello de botella porque el proxy corre en TODAS las rutas.
+// 10s de margen es imperceptible para reaccionar a un cambio real, pero
+// elimina casi toda la carga repetida.
+let maintenanceCache: { value: boolean; expiresAt: number } | null = null;
+const MAINTENANCE_CACHE_MS = 10_000;
+
+async function getMaintenanceMode(
+  supabase: ReturnType<typeof createServerClient>
+): Promise<boolean> {
+  const now = Date.now();
+  if (maintenanceCache && maintenanceCache.expiresAt > now) {
+    return maintenanceCache.value;
+  }
+  const { data } = await supabase.from('app_settings').select('maintenance_mode').eq('id', 1).single();
+  const value = data?.maintenance_mode ?? false;
+  maintenanceCache = { value, expiresAt: now + MAINTENANCE_CACHE_MS };
+  return value;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -36,19 +58,15 @@ export async function updateSession(request: NextRequest) {
   const isMaintenancePath = request.nextUrl.pathname === maintenancePath;
 
   if (!request.nextUrl.pathname.startsWith('/api')) {
-    const { data: settings } = await supabase
-      .from('app_settings')
-      .select('maintenance_mode')
-      .eq('id', 1)
-      .single();
+    const maintenanceMode = await getMaintenanceMode(supabase);
 
-    if (settings?.maintenance_mode && !isMaintenancePath) {
+    if (maintenanceMode && !isMaintenancePath) {
       const url = request.nextUrl.clone();
       url.pathname = maintenancePath;
       return NextResponse.redirect(url);
     }
 
-    if (!settings?.maintenance_mode && isMaintenancePath) {
+    if (!maintenanceMode && isMaintenancePath) {
       const url = request.nextUrl.clone();
       if (user) {
         const { data: profile } = await supabase
@@ -65,12 +83,15 @@ export async function updateSession(request: NextRequest) {
   }
 
   const protectedRoutes = [
+    '/hoteles',
     '/dashboard',
     '/reservas',
     '/historial',
     '/limpieza',
     '/mantenimiento',
     '/usuarios',
+    '/analiticas',
+    '/actividades',
   ];
   const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)

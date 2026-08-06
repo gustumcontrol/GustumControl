@@ -29,9 +29,11 @@ const TYPE_ROUTE: Record<string, string> = {
 
 export function NotificationsBell({
   userId,
+  hotelId,
   collapsed = false,
 }: {
   userId: string;
+  hotelId: string;
   collapsed?: boolean;
 }) {
   const router = useRouter();
@@ -57,6 +59,7 @@ export function NotificationsBell({
     supabase
       .from('notifications')
       .select('*')
+      .eq('hotel_id', hotelId)
       .order('created_at', { ascending: false })
       .limit(50)
       .then(({ data }) => {
@@ -65,21 +68,31 @@ export function NotificationsBell({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hotelId]);
 
   useEffect(() => {
     const channel = supabase
       .channel('notifications-changes')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `hotel_id=eq.${hotelId}`,
+        },
         (payload) => {
           setNotifications((prev) => [payload.new as Notification, ...prev].slice(0, 50));
         }
       )
       .on(
         'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'notifications' },
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `hotel_id=eq.${hotelId}`,
+        },
         (payload) => {
           const deletedId = (payload.old as { id?: string }).id;
           setNotifications((prev) => prev.filter((n) => n.id !== deletedId));
@@ -90,7 +103,7 @@ export function NotificationsBell({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [hotelId]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -183,9 +196,12 @@ export function NotificationsBell({
 
           <div className="flex-1 overflow-y-auto p-2" style={{ background: '#FFFFFF' }}>
             {notifications.length === 0 ? (
-              <p className="text-sm p-4 text-center" style={{ color: 'var(--text-3)' }}>
-                No hay notificaciones todavía.
-              </p>
+              <div className="flex flex-col items-center gap-2 py-8 text-center">
+                <Icon name="bell-slash" style="duotone" size={26} color="var(--text-3)" />
+                <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+                  No hay notificaciones todavía.
+                </p>
+              </div>
             ) : (
               <div className="flex flex-col gap-1.5">
                 {notifications.map((n) => {

@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { RoomCard } from '@/components/room-card';
 import { RoomDetailDialog } from '@/components/room-detail-dialog';
+import { Icon } from '@/components/icon';
+import { sortByRoomNumber } from '@/lib/sort-rooms';
 import type { RoomStatus } from '@/lib/types';
 
 const FLOOR_ORDINALS = [
@@ -27,13 +29,22 @@ function floorLabel(floor: string) {
   return `Planta ${floor}`;
 }
 
-export function RoomGrid({ initialRooms }: { initialRooms: RoomStatus[] }) {
+export function RoomGrid({
+  initialRooms,
+  hotelId,
+}: {
+  initialRooms: RoomStatus[];
+  hotelId: string;
+}) {
   const [rooms, setRooms] = useState<RoomStatus[]>(initialRooms);
 
   useEffect(() => {
     const refresh = async () => {
-      const { data } = await supabase.from('room_status').select('*').order('number');
-      if (data) setRooms(data);
+      const { data } = await supabase
+        .from('room_status')
+        .select('*')
+        .eq('hotel_id', hotelId);
+      if (data) setRooms(sortByRoomNumber(data));
     };
 
     const channel = supabase.channel('room-grid-changes');
@@ -45,7 +56,7 @@ export function RoomGrid({ initialRooms }: { initialRooms: RoomStatus[] }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [hotelId]);
 
   const byFloor = rooms.reduce<Record<string, RoomStatus[]>>((acc, room) => {
     const floor = room.floor ?? 'Sin piso';
@@ -55,9 +66,12 @@ export function RoomGrid({ initialRooms }: { initialRooms: RoomStatus[] }) {
 
   if (rooms.length === 0) {
     return (
-      <p className="text-sm text-center" style={{ color: 'var(--text-3)' }}>
-        No hay habitaciones registradas todavía.
-      </p>
+      <div className="flex flex-col items-center gap-2 py-16 text-center">
+        <Icon name="bed" style="duotone" size={32} color="var(--text-3)" />
+        <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+          No hay habitaciones registradas todavía.
+        </p>
+      </div>
     );
   }
 

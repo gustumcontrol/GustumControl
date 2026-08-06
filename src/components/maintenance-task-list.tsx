@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { Icon } from '@/components/icon';
 import { MaintenanceIssueDialog } from '@/components/maintenance-issue-dialog';
-import { updateMaintenanceIssueStatus } from '@/lib/actions/maintenance';
+import { CustomSelect } from '@/components/custom-select';
+import { updateMaintenanceIssueStatus, updateMaintenanceIssuePriority } from '@/lib/actions/maintenance';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
-import type { MaintenanceStatus } from '@/lib/types';
+import { PRIORITY_META, PRIORITY_OPTIONS } from '@/lib/maintenance-priority';
+import type { MaintenancePriority, MaintenanceStatus } from '@/lib/types';
 
 export type MaintenanceIssueRow = {
   id: string;
@@ -13,6 +15,7 @@ export type MaintenanceIssueRow = {
   description: string;
   photo_urls: string[];
   status: string;
+  priority: string;
   opened_at: string;
   opened_by_name: string | null;
   room: { number: string; floor: string } | null;
@@ -66,14 +69,24 @@ function IssueRow({
   task,
   isPending,
   onAdvance,
+  onChangePriority,
   onOpenDetail,
 }: {
   task: MaintenanceIssueRow;
   isPending: boolean;
   onAdvance: () => void;
+  onChangePriority: (priority: MaintenancePriority) => void;
   onOpenDetail: () => void;
 }) {
   const meta = STATUS_META[task.status] ?? STATUS_META.PENDIENTE;
+  // Estado optimista: refleja la prioridad elegida al instante, sin esperar
+  // a que la actualización llegue al servidor y vuelva por revalidación.
+  const [optimisticPriority, setOptimisticPriority] = useState(task.priority);
+  useEffect(() => {
+    setOptimisticPriority(task.priority);
+  }, [task.priority]);
+  const priorityMeta =
+    PRIORITY_META[optimisticPriority as MaintenancePriority] ?? PRIORITY_META.MEDIA;
   const visiblePhotos = task.photo_urls.slice(0, 2);
   const extraPhotos = task.photo_urls.length - visiblePhotos.length;
 
@@ -137,6 +150,19 @@ function IssueRow({
         </div>
       )}
 
+      <div className="shrink-0 w-32" onClick={(e) => e.stopPropagation()}>
+        <CustomSelect
+          value={optimisticPriority}
+          onChange={(v) => {
+            setOptimisticPriority(v);
+            onChangePriority(v as MaintenancePriority);
+          }}
+          options={PRIORITY_OPTIONS}
+          triggerBackground={priorityMeta.bg}
+          triggerColor={priorityMeta.fg}
+        />
+      </div>
+
       <button
         type="button"
         onClick={(e) => {
@@ -183,6 +209,12 @@ export function MaintenanceTaskList({ tasks }: { tasks: MaintenanceIssueRow[] })
     });
   };
 
+  const handleChangePriority = (id: string, priority: MaintenancePriority) => {
+    startTransition(async () => {
+      await updateMaintenanceIssuePriority(id, priority);
+    });
+  };
+
   return (
     <div className="flex flex-col gap-3">
       {tasks.map((task) => (
@@ -191,6 +223,7 @@ export function MaintenanceTaskList({ tasks }: { tasks: MaintenanceIssueRow[] })
           task={task}
           isPending={pendingId === task.id}
           onAdvance={() => handleAdvance(task.id, task.status)}
+          onChangePriority={(priority) => handleChangePriority(task.id, priority)}
           onOpenDetail={() => setDetailTask(task)}
         />
       ))}

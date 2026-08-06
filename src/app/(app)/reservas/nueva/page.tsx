@@ -1,8 +1,11 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { ReservationForm } from '@/components/reservation-form';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/icon';
+import { getHotelContext } from '@/lib/hotel-context';
+import { sortByRoomNumber } from '@/lib/sort-rooms';
 
 export default async function NuevaReservaPage({
   searchParams,
@@ -10,14 +13,20 @@ export default async function NuevaReservaPage({
   searchParams: Promise<{ room?: string }>;
 }) {
   const { room } = await searchParams;
+  const { hotelId, isAdmin } = await getHotelContext();
+
+  if (isAdmin && !hotelId) {
+    redirect('/hoteles');
+  }
+
   const supabase = await createSupabaseServerClient();
 
   const [{ data: freeRooms }, { data: roomTypes }, { data: boardPlans }] = await Promise.all([
     supabase
       .from('room_status')
       .select('*')
-      .in('computed_status', ['LIBRE', 'RESERVADA'])
-      .order('number'),
+      .eq('hotel_id', hotelId!)
+      .in('computed_status', ['LIBRE', 'RESERVADA']),
     supabase.from('room_types').select('*'),
     supabase.from('board_plans').select('*').order('price_per_person'),
   ]);
@@ -44,7 +53,7 @@ export default async function NuevaReservaPage({
             Nueva reserva
           </h1>
           <ReservationForm
-            rooms={freeRooms ?? []}
+            rooms={sortByRoomNumber(freeRooms ?? [])}
             roomTypes={roomTypes ?? []}
             boardPlans={boardPlans ?? []}
             defaultRoomId={room}

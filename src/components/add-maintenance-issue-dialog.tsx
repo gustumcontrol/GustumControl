@@ -16,6 +16,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { CustomSelect } from '@/components/custom-select';
 import { openMaintenanceIssue } from '@/lib/actions/maintenance';
 import { supabase } from '@/lib/supabase/client';
+import { PRIORITY_META, PRIORITY_OPTIONS } from '@/lib/maintenance-priority';
+import type { MaintenancePriority } from '@/lib/types';
 
 type RoomOption = { id: string; number: string; floor: string; type: string };
 
@@ -23,6 +25,7 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
   const [open, setOpen] = useState(false);
   const [roomId, setRoomId] = useState('');
   const [description, setDescription] = useState('');
+  const [priority, setPriority] = useState<MaintenancePriority>('MEDIA');
   const [photos, setPhotos] = useState<File[]>([]);
   const [error, setError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -31,6 +34,7 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
   const reset = () => {
     setRoomId('');
     setDescription('');
+    setPriority('MEDIA');
     setPhotos([]);
     setError('');
   };
@@ -73,7 +77,7 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
     }
 
     startTransition(async () => {
-      const result = await openMaintenanceIssue(roomId, description.trim(), photoUrls);
+      const result = await openMaintenanceIssue(roomId, description.trim(), photoUrls, priority);
       if (result?.error) {
         setError(result.error);
         return;
@@ -128,6 +132,17 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ej: aire acondicionado no enfría, gotea el lavamanos..."
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>Prioridad</Label>
+            <CustomSelect
+              value={priority}
+              onChange={(v) => setPriority(v as MaintenancePriority)}
+              options={PRIORITY_OPTIONS}
+              triggerBackground={PRIORITY_META[priority].bg}
+              triggerColor={PRIORITY_META[priority].fg}
             />
           </div>
 

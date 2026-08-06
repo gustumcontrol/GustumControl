@@ -2,31 +2,25 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getAllActivity } from '@/lib/actions/activity';
 import { ActivityLogList } from '@/components/activity-log-list';
+import { getHotelContext } from '@/lib/hotel-context';
 
 export default async function ActividadesPage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+  const { role, hotelId } = await getHotelContext();
 
-  if (!user) {
+  if (!role) {
     redirect('/login');
   }
-
-  const { data: callerProfile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (callerProfile?.role !== 'admin') {
+  if (role !== 'admin') {
     redirect('/dashboard');
   }
+  if (!hotelId) {
+    redirect('/hoteles');
+  }
 
+  const supabase = await createSupabaseServerClient();
   const [entries, { data: profiles }] = await Promise.all([
-    getAllActivity(),
-    supabase.from('profiles').select('id, full_name').order('full_name'),
+    getAllActivity(hotelId),
+    supabase.from('profiles').select('id, full_name').eq('hotel_id', hotelId).order('full_name'),
   ]);
 
   return (

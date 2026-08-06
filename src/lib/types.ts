@@ -27,6 +27,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      hotels: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string | null;
+          timezone: string;
+          active: boolean;
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug?: string | null;
+          timezone?: string;
+          active?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string | null;
+          timezone?: string;
+          active?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Relationships: [];
+      };
       activity_log: {
         Row: {
           id: string;
@@ -37,6 +67,7 @@ export type Database = {
           description: string;
           metadata: Json | null;
           created_at: string;
+          hotel_id: string;
         };
         Insert: {
           id?: string;
@@ -47,6 +78,7 @@ export type Database = {
           description: string;
           metadata?: Json | null;
           created_at?: string;
+          hotel_id?: string;
         };
         Update: {
           id?: string;
@@ -57,6 +89,7 @@ export type Database = {
           description?: string;
           metadata?: Json | null;
           created_at?: string;
+          hotel_id?: string;
         };
         Relationships: [
           {
@@ -91,6 +124,7 @@ export type Database = {
           reservation_id: string;
           room_number: string;
           status: string;
+          hotel_id: string;
         };
         Insert: {
           changed_at?: string;
@@ -99,6 +133,7 @@ export type Database = {
           reservation_id: string;
           room_number: string;
           status: string;
+          hotel_id?: string;
         };
         Update: {
           changed_at?: string;
@@ -107,6 +142,7 @@ export type Database = {
           reservation_id?: string;
           room_number?: string;
           status?: string;
+          hotel_id?: string;
         };
         Relationships: [
           {
@@ -132,11 +168,13 @@ export type Database = {
           description: string;
           photo_urls: string[];
           status: string;
+          priority: string;
           opened_by: string | null;
           opened_at: string;
           started_at: string | null;
           closed_by: string | null;
           closed_at: string | null;
+          hotel_id: string;
         };
         Insert: {
           id?: string;
@@ -144,11 +182,13 @@ export type Database = {
           description: string;
           photo_urls?: string[];
           status?: string;
+          priority?: string;
           opened_by?: string | null;
           opened_at?: string;
           started_at?: string | null;
           closed_by?: string | null;
           closed_at?: string | null;
+          hotel_id?: string;
         };
         Update: {
           id?: string;
@@ -156,11 +196,13 @@ export type Database = {
           description?: string;
           photo_urls?: string[];
           status?: string;
+          priority?: string;
           opened_by?: string | null;
           opened_at?: string;
           started_at?: string | null;
           closed_by?: string | null;
           closed_at?: string | null;
+          hotel_id?: string;
         };
         Relationships: [
           {
@@ -196,6 +238,7 @@ export type Database = {
           assigned_at: string;
           released_by: string | null;
           released_at: string | null;
+          hotel_id: string;
         };
         Insert: {
           id?: string;
@@ -206,6 +249,7 @@ export type Database = {
           assigned_at?: string;
           released_by?: string | null;
           released_at?: string | null;
+          hotel_id?: string;
         };
         Update: {
           id?: string;
@@ -216,6 +260,7 @@ export type Database = {
           assigned_at?: string;
           released_by?: string | null;
           released_at?: string | null;
+          hotel_id?: string;
         };
         Relationships: [
           {
@@ -250,6 +295,7 @@ export type Database = {
           reservation_id: string | null;
           room_number: string | null;
           type: string;
+          hotel_id: string;
         };
         Insert: {
           created_at?: string;
@@ -259,6 +305,7 @@ export type Database = {
           reservation_id?: string | null;
           room_number?: string | null;
           type: string;
+          hotel_id?: string;
         };
         Update: {
           created_at?: string;
@@ -268,6 +315,7 @@ export type Database = {
           reservation_id?: string | null;
           room_number?: string | null;
           type?: string;
+          hotel_id?: string;
         };
         Relationships: [
           {
@@ -289,6 +337,7 @@ export type Database = {
           last_active: string | null;
           role: string;
           status: string;
+          hotel_id: string;
         };
         Insert: {
           created_at?: string | null;
@@ -299,6 +348,7 @@ export type Database = {
           last_active?: string | null;
           role: string;
           status?: string;
+          hotel_id?: string;
         };
         Update: {
           created_at?: string | null;
@@ -309,6 +359,7 @@ export type Database = {
           last_active?: string | null;
           role?: string;
           status?: string;
+          hotel_id?: string;
         };
         Relationships: [];
       };
@@ -334,6 +385,7 @@ export type Database = {
           room_type: string;
           ticket: string | null;
           total: number;
+          hotel_id: string;
         };
         Insert: {
           archived_at?: string;
@@ -356,6 +408,7 @@ export type Database = {
           room_type: string;
           ticket?: string | null;
           total: number;
+          hotel_id?: string;
         };
         Update: {
           archived_at?: string;
@@ -378,6 +431,7 @@ export type Database = {
           room_type?: string;
           ticket?: string | null;
           total?: number;
+          hotel_id?: string;
         };
         Relationships: [];
       };
@@ -405,6 +459,7 @@ export type Database = {
           room_id: string;
           status: string;
           total: number | null;
+          hotel_id: string;
         };
         Insert: {
           board_plan?: string | null;
@@ -429,6 +484,7 @@ export type Database = {
           room_id: string;
           status?: string;
           total?: number | null;
+          hotel_id?: string;
         };
         Update: {
           board_plan?: string | null;
@@ -453,6 +509,7 @@ export type Database = {
           room_id?: string;
           status?: string;
           total?: number | null;
+          hotel_id?: string;
         };
         Relationships: [
           {
@@ -508,6 +565,7 @@ export type Database = {
           id: string;
           number: string;
           type: string;
+          hotel_id: string;
         };
         Insert: {
           active?: boolean;
@@ -516,6 +574,7 @@ export type Database = {
           id?: string;
           number: string;
           type: string;
+          hotel_id?: string;
         };
         Update: {
           active?: boolean;
@@ -524,6 +583,7 @@ export type Database = {
           id?: string;
           number?: string;
           type?: string;
+          hotel_id?: string;
         };
         Relationships: [];
       };
@@ -538,6 +598,7 @@ export type Database = {
           computed_status: string | null;
           floor: string | null;
           guest_name: string | null;
+          hotel_id: string | null;
           maintenance_issue_id: string | null;
           maintenance_description: string | null;
           staff_assignment_id: string | null;
@@ -563,16 +624,33 @@ export type Database = {
         Args: Record<string, never>;
         Returns: string;
       };
+      current_user_hotel_id: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
+      first_hotel_id: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
       update_cleaning_status: {
         Args: { p_reservation_id: string; p_status: string };
         Returns: undefined;
       };
       open_maintenance_issue: {
-        Args: { p_room_id: string; p_description: string; p_photo_urls?: string[] };
+        Args: {
+          p_room_id: string;
+          p_description: string;
+          p_photo_urls?: string[];
+          p_priority?: string;
+        };
         Returns: string;
       };
       update_maintenance_issue_status: {
         Args: { p_issue_id: string; p_status: string };
+        Returns: undefined;
+      };
+      update_maintenance_issue_priority: {
+        Args: { p_issue_id: string; p_priority: string };
         Returns: undefined;
       };
       edit_maintenance_issue: {
@@ -600,6 +678,7 @@ export type Database = {
 export type Tables<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Row"];
 
+export type Hotel = Database["public"]["Tables"]["hotels"]["Row"];
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type BoardPlan = Database["public"]["Tables"]["board_plans"]["Row"];
 export type Room = Database["public"]["Tables"]["rooms"]["Row"];
@@ -620,6 +699,7 @@ export type NavCategory = { category: string; items: NavItem[] };
 export type UserStatus = "active" | "inactive" | "suspended";
 export type CleaningStatus = "NO" | "PENDIENTE" | "EN PROCESO" | "LIMPIADO";
 export type MaintenanceStatus = "NO" | "PENDIENTE" | "EN PROCESO" | "REALIZADO";
+export type MaintenancePriority = "BAJA" | "MEDIA" | "ALTA" | "URGENTE";
 export type ComputedRoomStatus =
   | "LIBRE"
   | "OCUPADA"

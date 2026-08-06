@@ -114,9 +114,12 @@ export function CleaningTaskList({ tasks }: { tasks: CleaningTask[] }) {
 
   if (tasks.length === 0) {
     return (
-      <p className="text-sm text-center" style={{ color: 'var(--text-3)' }}>
-        No hay habitaciones pendientes de limpieza.
-      </p>
+      <div className="flex flex-col items-center gap-2 py-16 text-center">
+        <Icon name="circle-check" style="duotone" size={32} color="var(--accent-c)" />
+        <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+          No hay habitaciones pendientes de limpieza.
+        </p>
+      </div>
     );
   }
 

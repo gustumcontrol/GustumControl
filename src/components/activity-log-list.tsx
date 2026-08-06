@@ -146,9 +146,12 @@ export function ActivityLogList({
       </p>
 
       {grouped.length === 0 ? (
-        <p className="text-sm text-center py-8" style={{ color: 'var(--text-3)' }}>
-          No hay actividad que coincida con los filtros.
-        </p>
+        <div className="flex flex-col items-center gap-2 py-16 text-center">
+          <Icon name="list-check" style="duotone" size={32} color="var(--text-3)" />
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+            No hay actividad que coincida con los filtros.
+          </p>
+        </div>
       ) : (
         <div className="flex flex-col gap-6">
           {grouped.map(([day, dayEntries]) => (

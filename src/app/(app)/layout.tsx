@@ -1,7 +1,9 @@
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { NavLinks } from '@/components/nav-links';
 import { Sidebar } from '@/components/sidebar';
+import { getHotelContext } from '@/lib/hotel-context';
 import type { Role, NavCategory } from '@/lib/types';
 
 const OPERACION: NavCategory = {
@@ -52,28 +54,99 @@ const ROLE_LABEL: Record<Role, string> = {
   mantenimiento: 'Mantenimiento',
 };
 
+// Las cuentas de la barra lateral, el nombre del hotel activo y la lista de
+// hoteles son lo más lento de esta página (varias consultas a Supabase) y no
+// hacen falta para pintar la estructura. Van en su propio componente async
+// para que Suspense pueda mostrar el sidebar "pelado" de inmediato y llenar
+// esto un momento después, en vez de bloquear toda la navegación — esto es
+// lo que hace que cambiar de hotel (o cualquier redirect que reejecute el
+// layout) se sienta instantáneo en vez de quedarse en blanco 1-2s.
+async function SidebarData({
+  role,
+  hotelId,
+  isAdmin,
+  userId,
+  displayName,
+  initial,
+}: {
+  role: Role;
+  hotelId: string;
+  isAdmin: boolean;
+  userId: string;
+  displayName: string;
+  initial: string;
+}) {
+  const supabase = await createSupabaseServerClient();
+
+  const [
+    { data: hotelRow },
+    { data: hotelsList },
+    reservasCount,
+    limpiezaCount,
+    mantenimientoCount,
+  ] = await Promise.all([
+    supabase.from('hotels').select('name').eq('id', hotelId).single(),
+    isAdmin
+      ? supabase.from('hotels').select('id, name').order('created_at')
+      : Promise.resolve({ data: null }),
+    supabase
+      .from('reservations')
+      .select('id', { count: 'exact', head: true })
+      .eq('hotel_id', hotelId)
+      .eq('status', 'ACTIVA'),
+    supabase
+      .from('reservations')
+      .select('id', { count: 'exact', head: true })
+      .eq('hotel_id', hotelId)
+      .in('cleaning_status', ['PENDIENTE', 'EN PROCESO']),
+    supabase
+      .from('maintenance_issues')
+      .select('id', { count: 'exact', head: true })
+      .eq('hotel_id', hotelId)
+      .neq('status', 'REALIZADO'),
+  ]);
+
+  const COUNT_BY_HREF: Record<string, number> = {
+    '/reservas': reservasCount.count ?? 0,
+    '/limpieza': limpiezaCount.count ?? 0,
+    '/mantenimiento': mantenimientoCount.count ?? 0,
+  };
+
+  const navCategories = (NAV_BY_ROLE[role] ?? []).map((cat) => ({
+    ...cat,
+    items: cat.items.map((item) => ({
+      ...item,
+      count: COUNT_BY_HREF[item.href],
+    })),
+  }));
+
+  return (
+    <Sidebar
+      categories={navCategories}
+      userId={userId}
+      hotelId={hotelId}
+      hotelName={hotelRow?.name ?? ''}
+      hotels={hotelsList ?? []}
+      displayName={displayName}
+      roleLabel={ROLE_LABEL[role]}
+      initial={initial}
+      isAdmin={isAdmin}
+    />
+  );
+}
+
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+  const { userId, fullName, status, role: userRole, hotelId, isAdmin } = await getHotelContext();
 
-  if (!user) {
+  if (!userId) {
     redirect('/login');
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, role, status')
-    .eq('id', user.id)
-    .single();
-
-  if (profile && profile.status !== 'active') {
+  if (status && status !== 'active') {
     return (
       <div
         className="min-h-screen flex items-center justify-center px-4"
@@ -103,35 +176,17 @@ export default async function AppLayout({
     );
   }
 
-  const role = (profile?.role as Role) ?? 'recepcion';
+  const role = userRole ?? 'recepcion';
 
-  const [reservasCount, limpiezaCount, mantenimientoCount] = await Promise.all([
-    supabase.from('reservations').select('id', { count: 'exact', head: true }).eq('status', 'ACTIVA'),
-    supabase
-      .from('reservations')
-      .select('id', { count: 'exact', head: true })
-      .in('cleaning_status', ['PENDIENTE', 'EN PROCESO']),
-    supabase
-      .from('maintenance_issues')
-      .select('id', { count: 'exact', head: true })
-      .neq('status', 'REALIZADO'),
-  ]);
+  if (isAdmin && !hotelId) {
+    redirect('/hoteles');
+  }
 
-  const COUNT_BY_HREF: Record<string, number> = {
-    '/reservas': reservasCount.count ?? 0,
-    '/limpieza': limpiezaCount.count ?? 0,
-    '/mantenimiento': mantenimientoCount.count ?? 0,
-  };
-
-  const navCategories = (NAV_BY_ROLE[role] ?? []).map((cat) => ({
-    ...cat,
-    items: cat.items.map((item) => ({
-      ...item,
-      count: COUNT_BY_HREF[item.href],
-    })),
-  }));
-  const navFlat = navCategories.flatMap((c) => c.items);
-  const displayName = profile?.full_name ?? user.email ?? '';
+  // Categorías base sin contador — es lo que se ve mientras SidebarData
+  // todavía está cargando las cuentas reales.
+  const categoriesBase = NAV_BY_ROLE[role] ?? [];
+  const navFlat = categoriesBase.flatMap((c) => c.items);
+  const displayName = fullName ?? '';
   const initial = displayName.trim().charAt(0).toUpperCase();
 
   /* ── Versión anterior con header horizontal (comentada) ──────────────────
@@ -201,13 +256,28 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
-      <Sidebar
-        categories={navCategories}
-        userId={user.id}
-        displayName={displayName}
-        roleLabel={ROLE_LABEL[role]}
-        initial={initial}
-      />
+      <Suspense
+        fallback={
+          <Sidebar
+            categories={categoriesBase}
+            userId={userId!}
+            hotelId={hotelId!}
+            displayName={displayName}
+            roleLabel={ROLE_LABEL[role]}
+            initial={initial}
+            isAdmin={role === 'admin'}
+          />
+        }
+      >
+        <SidebarData
+          role={role}
+          hotelId={hotelId!}
+          isAdmin={role === 'admin'}
+          userId={userId!}
+          displayName={displayName}
+          initial={initial}
+        />
+      </Suspense>
 
       <div className="flex-1 min-w-0 flex flex-col">
         <header
@@ -232,7 +302,7 @@ export default async function AppLayout({
           </nav>
         </header>
 
-        <main className="flex-1 max-w-[96rem] w-full mx-auto px-6 py-8">{children}</main>
+        <main className="flex-1 max-w-[96rem] w-full mx-auto px-6 pt-8 pb-8 sm:pt-5">{children}</main>
       </div>
     </div>
   );

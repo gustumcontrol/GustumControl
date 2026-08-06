@@ -238,9 +238,12 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
       </p>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-center" style={{ color: 'var(--text-3)' }}>
-          No hay reservas en el historial que coincidan.
-        </p>
+        <div className="flex flex-col items-center gap-2 py-16 text-center">
+          <Icon name="clock-rotate-left" style="duotone" size={32} color="var(--text-3)" />
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+            No hay reservas en el historial que coincidan.
+          </p>
+        </div>
       ) : (
         <div
           className="rounded-lg overflow-x-auto"

@@ -2,26 +2,27 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { UsersTable } from '@/components/users-table';
 import { AddUserDialog } from '@/components/add-user-dialog';
+import { getHotelContext } from '@/lib/hotel-context';
 
 export default async function UsuariosPage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+  const { role, hotelId, userId } = await getHotelContext();
 
-  if (!user) {
+  if (!role) {
     redirect('/login');
   }
-
-  const [{ data: callerProfile }, { data: users }] = await Promise.all([
-    supabase.from('profiles').select('role').eq('id', user.id).single(),
-    supabase.from('profiles').select('*').order('full_name'),
-  ]);
-
-  if (callerProfile?.role !== 'admin') {
+  if (role !== 'admin') {
     redirect('/dashboard');
   }
+  if (!hotelId) {
+    redirect('/hoteles');
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: users } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('hotel_id', hotelId)
+    .order('full_name');
 
   return (
     <div>
@@ -36,7 +37,7 @@ export default async function UsuariosPage() {
         </div>
         <AddUserDialog />
       </div>
-      <UsersTable users={users ?? []} currentUserId={user.id} />
+      <UsersTable users={users ?? []} currentUserId={userId!} />
     </div>
   );
 }
