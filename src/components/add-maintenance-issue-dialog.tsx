@@ -25,7 +25,7 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
   const [open, setOpen] = useState(false);
   const [roomId, setRoomId] = useState('');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<MaintenancePriority>('MEDIA');
+  const [priority, setPriority] = useState<MaintenancePriority>('BAJA');
   const [photos, setPhotos] = useState<File[]>([]);
   const [error, setError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -34,7 +34,7 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
   const reset = () => {
     setRoomId('');
     setDescription('');
-    setPriority('MEDIA');
+    setPriority('BAJA');
     setPhotos([]);
     setError('');
   };
@@ -135,34 +135,36 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label>Prioridad</Label>
-            <CustomSelect
-              value={priority}
-              onChange={(v) => setPriority(v as MaintenancePriority)}
-              options={PRIORITY_OPTIONS}
-              triggerBackground={PRIORITY_META[priority].bg}
-              triggerColor={PRIORITY_META[priority].fg}
-            />
-          </div>
+          <div className="flex gap-3 min-w-0">
+            <div className="flex flex-col gap-1.5 w-32 shrink-0">
+              <Label>Prioridad</Label>
+              <CustomSelect
+                value={priority}
+                onChange={(v) => setPriority(v as MaintenancePriority)}
+                options={PRIORITY_OPTIONS}
+                triggerBackground={PRIORITY_META[priority].bg}
+                triggerColor={PRIORITY_META[priority].fg}
+              />
+            </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="issue-photo">Fotos (opcional)</Label>
-            <input
-              id="issue-photo"
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => setPhotos(Array.from(e.target.files ?? []))}
-              className="text-sm cursor-pointer"
-              style={{ color: 'var(--text-2)' }}
-            />
-            {photos.length > 0 && (
-              <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                {photos.length} foto{photos.length === 1 ? '' : 's'} seleccionada
-                {photos.length === 1 ? '' : 's'}.
-              </p>
-            )}
+            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+              <Label htmlFor="issue-photo">Fotos (opcional)</Label>
+              <input
+                id="issue-photo"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => setPhotos(Array.from(e.target.files ?? []))}
+                className="w-full min-w-0 text-sm cursor-pointer overflow-hidden file:cursor-pointer file:mr-2 file:rounded-lg file:border-0 file:px-3 file:py-1.5 file:text-sm file:font-medium file:bg-[#F0F2F5] file:text-[#111827]"
+                style={{ color: 'var(--text-2)' }}
+              />
+              {photos.length > 0 && (
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                  {photos.length} foto{photos.length === 1 ? '' : 's'} seleccionada
+                  {photos.length === 1 ? '' : 's'}.
+                </p>
+              )}
+            </div>
           </div>
 
           <DialogFooter>

@@ -15,7 +15,7 @@ export async function openMaintenanceIssue(
     p_room_id: roomId,
     p_description: description,
     p_photo_urls: photoUrls ?? [],
-    p_priority: priority ?? 'MEDIA',
+    p_priority: priority ?? 'BAJA',
   });
 
   if (error) {

@@ -15,11 +15,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { StatusBadge } from '@/components/status-badge';
+import { CustomSelect } from '@/components/custom-select';
 import { closeReservation } from '@/lib/actions/reservations';
 import { assignRoomToStaff, releaseStaffRoom } from '@/lib/actions/staff-assignments';
 import { openMaintenanceIssue } from '@/lib/actions/maintenance';
 import { supabase } from '@/lib/supabase/client';
-import type { RoomStatus, ComputedRoomStatus } from '@/lib/types';
+import { PRIORITY_META, PRIORITY_OPTIONS } from '@/lib/maintenance-priority';
+import type { RoomStatus, ComputedRoomStatus, MaintenancePriority } from '@/lib/types';
 
 type Mode = 'none' | 'assign' | 'report-issue';
 
@@ -37,6 +39,7 @@ export function RoomDetailDialog({
   const [staffName, setStaffName] = useState('');
   const [staffNotes, setStaffNotes] = useState('');
   const [issueDescription, setIssueDescription] = useState('');
+  const [issuePriority, setIssuePriority] = useState<MaintenancePriority>('BAJA');
   const [issuePhotos, setIssuePhotos] = useState<File[]>([]);
   const [issueUploading, setIssueUploading] = useState(false);
 
@@ -48,6 +51,7 @@ export function RoomDetailDialog({
     setStaffName('');
     setStaffNotes('');
     setIssueDescription('');
+    setIssuePriority('BAJA');
     setIssuePhotos([]);
   };
 
@@ -128,7 +132,8 @@ export function RoomDetailDialog({
       const result = await openMaintenanceIssue(
         room.room_id!,
         issueDescription.trim(),
-        photoUrls
+        photoUrls,
+        issuePriority
       );
       if (result?.error) {
         setError(result.error);
@@ -208,23 +213,36 @@ export function RoomDetailDialog({
                 placeholder="Ej: aire acondicionado no enfría, gotea el lavamanos..."
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="issue-photo">Fotos (opcional)</Label>
-              <input
-                id="issue-photo"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(e) => setIssuePhotos(Array.from(e.target.files ?? []))}
-                className="text-sm cursor-pointer"
-                style={{ color: 'var(--text-2)' }}
-              />
-              {issuePhotos.length > 0 && (
-                <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                  {issuePhotos.length} foto{issuePhotos.length === 1 ? '' : 's'} seleccionada
-                  {issuePhotos.length === 1 ? '' : 's'}.
-                </p>
-              )}
+            <div className="flex gap-3 min-w-0">
+              <div className="flex flex-col gap-1.5 w-32 shrink-0">
+                <Label>Prioridad</Label>
+                <CustomSelect
+                  value={issuePriority}
+                  onChange={(v) => setIssuePriority(v as MaintenancePriority)}
+                  options={PRIORITY_OPTIONS}
+                  triggerBackground={PRIORITY_META[issuePriority].bg}
+                  triggerColor={PRIORITY_META[issuePriority].fg}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                <Label htmlFor="issue-photo">Fotos (opcional)</Label>
+                <input
+                  id="issue-photo"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => setIssuePhotos(Array.from(e.target.files ?? []))}
+                  className="w-full min-w-0 text-sm cursor-pointer overflow-hidden file:cursor-pointer file:mr-2 file:rounded-lg file:border-0 file:px-3 file:py-1.5 file:text-sm file:font-medium file:bg-[#F0F2F5] file:text-[#111827]"
+                  style={{ color: 'var(--text-2)' }}
+                />
+                {issuePhotos.length > 0 && (
+                  <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                    {issuePhotos.length} foto{issuePhotos.length === 1 ? '' : 's'} seleccionada
+                    {issuePhotos.length === 1 ? '' : 's'}.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         ) : status === 'LIBRE' ? (

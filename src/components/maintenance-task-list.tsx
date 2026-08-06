@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { Icon } from '@/components/icon';
 import { MaintenanceIssueDialog } from '@/components/maintenance-issue-dialog';
 import { CustomSelect } from '@/components/custom-select';
@@ -81,10 +81,14 @@ function IssueRow({
   const meta = STATUS_META[task.status] ?? STATUS_META.PENDIENTE;
   // Estado optimista: refleja la prioridad elegida al instante, sin esperar
   // a que la actualización llegue al servidor y vuelva por revalidación.
+  // Se ajusta durante el render (no en un efecto) cuando cambia la prop,
+  // siguiendo el patrón recomendado por React para este caso.
+  const [prevPriority, setPrevPriority] = useState(task.priority);
   const [optimisticPriority, setOptimisticPriority] = useState(task.priority);
-  useEffect(() => {
+  if (task.priority !== prevPriority) {
+    setPrevPriority(task.priority);
     setOptimisticPriority(task.priority);
-  }, [task.priority]);
+  }
   const priorityMeta =
     PRIORITY_META[optimisticPriority as MaintenancePriority] ?? PRIORITY_META.MEDIA;
   const visiblePhotos = task.photo_urls.slice(0, 2);

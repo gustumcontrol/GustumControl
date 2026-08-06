@@ -50,17 +50,18 @@ export function Sidebar({
   // Cookie de solo preferencia de UI (no un límite de seguridad: un admin ya
   // puede ver/operar cualquier hotel vía RLS), así que se setea directo acá
   // y se navega con el router — sin pasar por un server action, igual de
-  // rápido que un <Link> normal del sidebar. push() a la misma ruta en la
-  // que ya estás dispara una request extra en Next (verificado en vivo);
-  // si ya estás en /dashboard alcanza con refresh().
+  // rápido que un <Link> normal del sidebar. Si ya estás en /dashboard,
+  // push() a la misma ruta no alcanza por sí solo (Next no vuelve a pedir
+  // los datos); si venís de otra página, push() puede servir la versión
+  // de /dashboard que ya tenía cacheada del hotel anterior. refresh()
+  // fuerza que los datos salgan frescos en los dos casos.
   const handleSelectHotel = (id: string) => {
     setActiveHotelCookie(id);
     setHotelMenuOpen(false);
-    if (pathname === '/dashboard') {
-      router.refresh();
-    } else {
+    if (pathname !== '/dashboard') {
       router.push('/dashboard');
     }
+    router.refresh();
   };
 
   useEffect(() => {
