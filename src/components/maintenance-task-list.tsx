@@ -7,6 +7,7 @@ import { CustomSelect } from '@/components/custom-select';
 import { updateMaintenanceIssueStatus, updateMaintenanceIssuePriority } from '@/lib/actions/maintenance';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import { PRIORITY_META, PRIORITY_OPTIONS } from '@/lib/maintenance-priority';
+import { floorLabel } from '@/lib/floor-label';
 import type { MaintenancePriority, MaintenanceStatus } from '@/lib/types';
 
 export type MaintenanceIssueRow = {
@@ -36,24 +37,6 @@ const STATUS_META: Record<string, { bg: string; fg: string; cta: string; icon?: 
   },
 };
 
-const FLOOR_ORDINALS: Record<string, string> = {
-  '1': 'Primera planta',
-  '2': 'Segunda planta',
-  '3': 'Tercera planta',
-  '4': 'Cuarta planta',
-  '5': 'Quinta planta',
-  '6': 'Sexta planta',
-  '7': 'Séptima planta',
-  '8': 'Octava planta',
-  '9': 'Novena planta',
-  '10': 'Décima planta',
-};
-
-function floorLabel(floor: string | undefined) {
-  if (!floor) return '—';
-  return FLOOR_ORDINALS[floor] ?? `Planta ${floor}`;
-}
-
 function relativeTime(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diffMs / 60000);
@@ -71,12 +54,14 @@ function IssueRow({
   onAdvance,
   onChangePriority,
   onOpenDetail,
+  hotelSlug,
 }: {
   task: MaintenanceIssueRow;
   isPending: boolean;
   onAdvance: () => void;
   onChangePriority: (priority: MaintenancePriority) => void;
   onOpenDetail: () => void;
+  hotelSlug?: string | null;
 }) {
   const meta = STATUS_META[task.status] ?? STATUS_META.PENDIENTE;
   // Estado optimista: refleja la prioridad elegida al instante, sin esperar
@@ -114,7 +99,7 @@ function IssueRow({
             Hab. {task.room?.number ?? '—'}
           </p>
           <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
-            {floorLabel(task.room?.floor)}
+            {floorLabel(task.room?.floor, hotelSlug)}
           </p>
         </div>
         <div className="min-w-0 flex-1">
@@ -186,7 +171,13 @@ function IssueRow({
   );
 }
 
-export function MaintenanceTaskList({ tasks }: { tasks: MaintenanceIssueRow[] }) {
+export function MaintenanceTaskList({
+  tasks,
+  hotelSlug,
+}: {
+  tasks: MaintenanceIssueRow[];
+  hotelSlug?: string | null;
+}) {
   useRealtimeRefresh(['maintenance_issues']);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [detailTask, setDetailTask] = useState<MaintenanceIssueRow | null>(null);
@@ -229,6 +220,7 @@ export function MaintenanceTaskList({ tasks }: { tasks: MaintenanceIssueRow[] })
           onAdvance={() => handleAdvance(task.id, task.status)}
           onChangePriority={(priority) => handleChangePriority(task.id, priority)}
           onOpenDetail={() => setDetailTask(task)}
+          hotelSlug={hotelSlug}
         />
       ))}
 

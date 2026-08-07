@@ -13,7 +13,7 @@ export default async function MantenimientoPage() {
   }
 
   const supabase = await createSupabaseServerClient();
-  const [{ data: issues }, { data: rooms }] = await Promise.all([
+  const [{ data: issues }, { data: rooms }, { data: hotel }] = await Promise.all([
     supabase
       .from('maintenance_issues')
       .select(
@@ -27,6 +27,7 @@ export default async function MantenimientoPage() {
       .select('id, number, floor, type')
       .eq('hotel_id', hotelId!)
       .eq('active', true),
+    supabase.from('hotels').select('slug').eq('id', hotelId!).single(),
   ]);
 
   const tasks: MaintenanceIssueRow[] = (issues ?? []).map((i) => ({
@@ -50,7 +51,7 @@ export default async function MantenimientoPage() {
         </h1>
         <AddMaintenanceIssueDialog rooms={availableRooms} />
       </div>
-      <MaintenanceTaskList tasks={tasks} />
+      <MaintenanceTaskList tasks={tasks} hotelSlug={hotel?.slug} />
     </div>
   );
 }

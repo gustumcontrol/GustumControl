@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { Icon } from '@/components/icon';
 import { updateCleaningStatus } from '@/lib/actions/cleaning';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
+import { floorLabel } from '@/lib/floor-label';
 import type { CleaningStatus } from '@/lib/types';
 
 export type CleaningTask = {
@@ -38,32 +39,16 @@ const STATUS_META: Record<string, { bg: string; fg: string; cta: string; icon?: 
   },
 };
 
-const FLOOR_ORDINALS: Record<string, string> = {
-  '1': 'Primera planta',
-  '2': 'Segunda planta',
-  '3': 'Tercera planta',
-  '4': 'Cuarta planta',
-  '5': 'Quinta planta',
-  '6': 'Sexta planta',
-  '7': 'Séptima planta',
-  '8': 'Octava planta',
-  '9': 'Novena planta',
-  '10': 'Décima planta',
-};
-
-function floorLabel(floor: string | undefined) {
-  if (!floor) return '—';
-  return FLOOR_ORDINALS[floor] ?? `Planta ${floor}`;
-}
-
 function TaskRow({
   task,
   isPending,
   onAdvance,
+  hotelSlug,
 }: {
   task: CleaningTask;
   isPending: boolean;
   onAdvance: () => void;
+  hotelSlug?: string | null;
 }) {
   const meta = STATUS_META[task.cleaning_status] ?? STATUS_META.PENDIENTE;
 
@@ -78,7 +63,7 @@ function TaskRow({
             Hab. {task.room?.number ?? '—'}
           </p>
           <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
-            {floorLabel(task.room?.floor)}
+            {floorLabel(task.room?.floor, hotelSlug)}
           </p>
         </div>
         <div className="min-w-0 flex-1">
@@ -107,7 +92,13 @@ function TaskRow({
   );
 }
 
-export function CleaningTaskList({ tasks }: { tasks: CleaningTask[] }) {
+export function CleaningTaskList({
+  tasks,
+  hotelSlug,
+}: {
+  tasks: CleaningTask[];
+  hotelSlug?: string | null;
+}) {
   useRealtimeRefresh(['reservations', 'cleaning_log']);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -141,6 +132,7 @@ export function CleaningTaskList({ tasks }: { tasks: CleaningTask[] }) {
           task={task}
           isPending={pendingId === task.id}
           onAdvance={() => handleAdvance(task.id, task.cleaning_status)}
+          hotelSlug={hotelSlug}
         />
       ))}
     </div>
