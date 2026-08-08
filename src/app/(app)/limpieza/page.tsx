@@ -17,7 +17,7 @@ export default async function LimpiezaPage() {
       .select('id, guest_name, cleaning_status, rooms(number, floor)')
       .eq('hotel_id', hotelId!)
       .in('cleaning_status', ['PENDIENTE', 'EN PROCESO'])
-      .order('check_in'),
+      .order('created_at', { ascending: false }),
     supabase.from('hotels').select('slug').eq('id', hotelId!).single(),
   ]);
 

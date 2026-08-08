@@ -21,7 +21,7 @@ export default async function MantenimientoPage() {
       )
       .eq('hotel_id', hotelId!)
       .neq('status', 'REALIZADO')
-      .order('opened_at', { ascending: true }),
+      .order('opened_at', { ascending: false }),
     supabase
       .from('rooms')
       .select('id, number, floor, type')

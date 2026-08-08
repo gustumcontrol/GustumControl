@@ -9,6 +9,8 @@ import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import { ACTION_META, dayKey, formatDayHeader, formatTime, lowerFirst } from '@/lib/activity-meta';
 import type { ActivityWithActor } from '@/lib/actions/activity';
 
+const PAGE_SIZE = 40;
+
 export function ActivityLogList({
   entries,
   users,
@@ -21,6 +23,16 @@ export function ActivityLogList({
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [query, setQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const filterKey = `${userId}|${dateFrom}|${dateTo}|${query}`;
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  // Si cambió algún filtro, volvemos a mostrar solo la primera tanda — esto
+  // se ajusta durante el render (patrón recomendado por React para
+  // "derivar estado cuando cambia otro estado"), no en un efecto aparte.
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
+    setVisibleCount(PAGE_SIZE);
+  }
 
   const userOptions = useMemo(
     () => [
@@ -47,16 +59,19 @@ export function ActivityLogList({
     });
   }, [entries, userId, dateFrom, dateTo, query]);
 
+  const visibleEntries = filtered.slice(0, visibleCount);
+  const hasMore = filtered.length > visibleEntries.length;
+
   const grouped = useMemo(() => {
     const map = new Map<string, ActivityWithActor[]>();
-    for (const e of filtered) {
+    for (const e of visibleEntries) {
       const key = dayKey(e.created_at);
       const list = map.get(key) ?? [];
       list.push(e);
       map.set(key, list);
     }
     return [...map.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
-  }, [filtered]);
+  }, [visibleEntries]);
 
   const hasFilters = userId !== 'all' || dateFrom || dateTo || query;
 
@@ -142,7 +157,8 @@ export function ActivityLogList({
       </div>
 
       <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-        {filtered.length} evento{filtered.length === 1 ? '' : 's'}
+        Mostrando {visibleEntries.length} de {filtered.length} evento
+        {filtered.length === 1 ? '' : 's'}
       </p>
 
       {grouped.length === 0 ? (
@@ -196,6 +212,17 @@ export function ActivityLogList({
               </div>
             </div>
           ))}
+
+          {hasMore && (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="self-center text-sm font-medium px-4 py-2 rounded-lg cursor-pointer transition-colors"
+              style={{ color: 'var(--accent-c)', background: 'var(--accent-dim)' }}
+            >
+              Ver más
+            </button>
+          )}
         </div>
       )}
     </div>

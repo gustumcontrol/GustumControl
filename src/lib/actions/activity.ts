@@ -24,7 +24,7 @@ export async function getAllActivity(hotelId: string): Promise<ActivityWithActor
     .select('*, profiles(full_name)')
     .eq('hotel_id', hotelId)
     .order('created_at', { ascending: false })
-    .limit(5000);
+    .limit(1000);
 
   return (data ?? []).map(({ profiles, ...rest }) => {
     const profile = Array.isArray(profiles) ? profiles[0] : profiles;
