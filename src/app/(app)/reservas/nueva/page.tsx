@@ -44,7 +44,7 @@ export default async function NuevaReservaPage({
         Volver
       </Button>
 
-      <div className="max-w-lg mx-auto pt-16">
+      <div className="max-w-lg mx-auto">
         <div
           className="rounded-lg p-8"
           style={{ background: '#FFFFFF', border: '1px solid var(--line)' }}
