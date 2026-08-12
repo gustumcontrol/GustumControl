@@ -33,10 +33,15 @@ export default async function ReservasPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h1 className="text-2xl font-semibold" style={{ color: 'var(--light)' }}>
-          Reservas activas
-        </h1>
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
+            Reservas activas
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+            Huéspedes alojados actualmente en el hotel.
+          </p>
+        </div>
         <Link href="/reservas/nueva">
           <Button>Nueva reserva</Button>
         </Link>

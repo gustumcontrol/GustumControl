@@ -23,11 +23,11 @@ export function RoomCard({ room }: { room: RoomStatus }) {
         }}
       >
         <div className="flex items-start justify-between opacity-50">
-          <div>
-            <p className="text-lg font-semibold" style={{ color: 'var(--light)' }}>
+          <div className="min-w-0 flex-1">
+            <p className="text-lg font-semibold truncate" style={{ color: 'var(--light)' }}>
               {room.number}
             </p>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+            <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
               {room.type}
             </p>
           </div>
@@ -55,12 +55,12 @@ export function RoomCard({ room }: { room: RoomStatus }) {
         borderColor: hovered ? accent : 'transparent',
       }}
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-lg font-semibold" style={{ color: 'var(--light)' }}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-lg font-semibold truncate" style={{ color: 'var(--light)' }}>
             {room.number}
           </p>
-          <p className="text-xs" style={{ color: 'var(--text-2)' }}>
+          <p className="text-xs truncate" style={{ color: 'var(--text-2)' }}>
             {room.type}
           </p>
         </div>

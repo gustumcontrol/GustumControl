@@ -286,6 +286,73 @@ export type Database = {
           },
         ];
       };
+      supply_requests: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          room_id: string;
+          category: string;
+          item: string;
+          quantity: number;
+          notes: string | null;
+          status: string;
+          requested_by: string | null;
+          requested_at: string;
+          purchased_by: string | null;
+          purchased_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          hotel_id?: string;
+          room_id: string;
+          category: string;
+          item: string;
+          quantity?: number;
+          notes?: string | null;
+          status?: string;
+          requested_by?: string | null;
+          requested_at?: string;
+          purchased_by?: string | null;
+          purchased_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          room_id?: string;
+          category?: string;
+          item?: string;
+          quantity?: number;
+          notes?: string | null;
+          status?: string;
+          requested_by?: string | null;
+          requested_at?: string;
+          purchased_by?: string | null;
+          purchased_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "supply_requests_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "supply_requests_requested_by_fkey";
+            columns: ["requested_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "supply_requests_purchased_by_fkey";
+            columns: ["purchased_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       notifications: {
         Row: {
           created_at: string;
@@ -669,6 +736,33 @@ export type Database = {
         Args: { p_assignment_id: string };
         Returns: undefined;
       };
+      add_supply_request: {
+        Args: {
+          p_room_id: string;
+          p_category: string;
+          p_item: string;
+          p_quantity?: number;
+          p_notes?: string | null;
+        };
+        Returns: string;
+      };
+      edit_supply_request: {
+        Args: {
+          p_id: string;
+          p_item: string;
+          p_quantity: number;
+          p_notes?: string | null;
+        };
+        Returns: undefined;
+      };
+      mark_supply_request_purchased: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      delete_supply_request: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
@@ -691,6 +785,7 @@ export type ActivityLogEntry = Database["public"]["Tables"]["activity_log"]["Row
 export type RoomStaffAssignment =
   Database["public"]["Tables"]["room_staff_assignments"]["Row"];
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
+export type SupplyRequest = Database["public"]["Tables"]["supply_requests"]["Row"];
 export type RoomStatus = Database["public"]["Views"]["room_status"]["Row"];
 
 export type Role = "recepcion" | "limpieza" | "mantenimiento" | "admin";
@@ -700,6 +795,8 @@ export type UserStatus = "active" | "inactive" | "suspended";
 export type CleaningStatus = "NO" | "PENDIENTE" | "EN PROCESO" | "LIMPIADO";
 export type MaintenanceStatus = "NO" | "PENDIENTE" | "EN PROCESO" | "REALIZADO";
 export type MaintenancePriority = "BAJA" | "MEDIA" | "ALTA" | "URGENTE";
+export type SupplyCategory = "LIMPIEZA" | "MANTENIMIENTO";
+export type SupplyStatus = "PENDIENTE" | "COMPRADO";
 export type ComputedRoomStatus =
   | "LIBRE"
   | "OCUPADA"

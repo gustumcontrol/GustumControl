@@ -82,7 +82,7 @@ export function RoomGrid({
           <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-2)' }}>
             {floorLabel(floor)}
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
             {floorRooms.map((room) => (
               <RoomDetailDialog key={room.room_id} room={room}>
                 <RoomCard room={room} />

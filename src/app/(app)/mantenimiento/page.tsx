@@ -1,7 +1,10 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { MaintenanceTaskList, type MaintenanceIssueRow } from '@/components/maintenance-task-list';
 import { AddMaintenanceIssueDialog } from '@/components/add-maintenance-issue-dialog';
+import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/icon';
 import { getHotelContext } from '@/lib/hotel-context';
 import { sortByRoomNumber } from '@/lib/sort-rooms';
 
@@ -45,11 +48,22 @@ export default async function MantenimientoPage() {
 
   return (
     <div className="lg:max-w-4xl lg:mx-auto">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h1 className="text-2xl font-semibold" style={{ color: 'var(--light)' }}>
-          Mantenimiento pendiente
-        </h1>
-        <AddMaintenanceIssueDialog rooms={availableRooms} />
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
+            Mantenimiento pendiente
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+            Incidencias abiertas que hay que resolver.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button render={<Link href="/mantenimiento/pedidos" />} nativeButton={false}>
+            <Icon name="cart-shopping" style="solid" size={12} color="#FFFFFF" />
+            Pedidos
+          </Button>
+          <AddMaintenanceIssueDialog rooms={availableRooms} />
+        </div>
       </div>
       <MaintenanceTaskList tasks={tasks} hotelSlug={hotel?.slug} />
     </div>

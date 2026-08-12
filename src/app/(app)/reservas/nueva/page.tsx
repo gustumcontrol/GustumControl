@@ -37,21 +37,24 @@ export default async function NuevaReservaPage({
         variant="outline"
         render={<Link href="/reservas" />}
         nativeButton={false}
-        className="sticky top-8 z-10 w-fit -mb-11"
+        className="absolute top-0 left-0 z-10 w-fit"
         style={{ color: '#323E51', background: '#E2E5EC', border: 'none' }}
       >
         <Icon name="arrow-left" style="duotone" size={12} color="#323E51" />
         Volver
       </Button>
 
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-lg mx-auto pt-16">
         <div
           className="rounded-lg p-8"
           style={{ background: '#FFFFFF', border: '1px solid var(--line)' }}
         >
-          <h1 className="text-2xl font-semibold mb-6" style={{ color: 'var(--light)' }}>
+          <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
             Nueva reserva
           </h1>
+          <p className="text-sm mb-6" style={{ color: 'var(--text-3)' }}>
+            Registra el check-in de un huésped nuevo.
+          </p>
           <ReservationForm
             rooms={sortByRoomNumber(freeRooms ?? [])}
             roomTypes={roomTypes ?? []}

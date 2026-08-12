@@ -1,6 +1,9 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { CleaningTaskList, type CleaningTask } from '@/components/cleaning-task-list';
+import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/icon';
 import { getHotelContext } from '@/lib/hotel-context';
 
 export default async function LimpiezaPage() {
@@ -28,9 +31,20 @@ export default async function LimpiezaPage() {
 
   return (
     <div className="lg:max-w-4xl lg:mx-auto">
-      <h1 className="text-2xl font-semibold mb-6" style={{ color: 'var(--light)' }}>
-        Limpieza pendiente
-      </h1>
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
+            Limpieza pendiente
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+            Habitaciones que hay que limpiar ahora mismo.
+          </p>
+        </div>
+        <Button render={<Link href="/limpieza/pedidos" />} nativeButton={false}>
+          <Icon name="cart-shopping" style="solid" size={12} color="#FFFFFF" />
+          Pedidos
+        </Button>
+      </div>
       <CleaningTaskList tasks={tasks} hotelSlug={hotel?.slug} />
     </div>
   );

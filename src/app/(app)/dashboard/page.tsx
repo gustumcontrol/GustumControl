@@ -19,9 +19,14 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6" style={{ color: 'var(--light)' }}>
-        Habitaciones
-      </h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
+          Habitaciones
+        </h1>
+        <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+          Estado de cada habitación en tiempo real: libres, ocupadas, en limpieza o mantenimiento.
+        </p>
+      </div>
       <RoomGrid key={hotelId} initialRooms={sortByRoomNumber(rooms ?? [])} hotelId={hotelId!} />
     </div>
   );
