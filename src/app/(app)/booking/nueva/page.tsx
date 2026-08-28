@@ -5,7 +5,7 @@ import { BackButton } from '@/components/back-button';
 import { getHotelContext } from '@/lib/hotel-context';
 import { sortByRoomNumber } from '@/lib/sort-rooms';
 
-export default async function NuevaReservaPage({
+export default async function NuevaReservaBookingPage({
   searchParams,
 }: {
   searchParams: Promise<{ room?: string }>;
@@ -31,13 +31,13 @@ export default async function NuevaReservaPage({
 
   return (
     <div className="relative">
-      <BackButton href="/reservas" className="mb-3 sm:mb-0 sm:absolute sm:left-0 sm:top-0" />
+      <BackButton href="/booking" className="mb-3 sm:mb-0 sm:absolute sm:left-0 sm:top-0" />
       <div className="max-w-lg mx-auto">
         <h1 className="text-xl sm:text-2xl font-semibold mb-0.5" style={{ color: 'var(--light)' }}>
-          Nueva reserva
+          Nueva reserva de Booking
         </h1>
         <p className="text-xs sm:text-sm mb-6" style={{ color: 'var(--text-3)' }}>
-          Check-in de un huésped nuevo.
+          Check-in de un huésped de Booking.com.
         </p>
         <div
           className="rounded-lg p-8"
@@ -48,6 +48,8 @@ export default async function NuevaReservaPage({
             roomTypes={roomTypes ?? []}
             boardPlans={boardPlans ?? []}
             defaultRoomId={room}
+            defaultSource="BOOKING"
+            redirectTo="/booking"
           />
         </div>
       </div>

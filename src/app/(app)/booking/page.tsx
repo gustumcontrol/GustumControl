@@ -7,7 +7,7 @@ import { Icon } from '@/components/icon';
 import { getHotelContext } from '@/lib/hotel-context';
 import { sortByRoomNumber } from '@/lib/sort-rooms';
 
-export default async function ReservasPage() {
+export default async function BookingPage() {
   const { hotelId, isAdmin } = await getHotelContext();
 
   if (isAdmin && !hotelId) {
@@ -24,6 +24,7 @@ export default async function ReservasPage() {
         )
         .eq('hotel_id', hotelId!)
         .eq('status', 'ACTIVA')
+        .eq('source', 'BOOKING')
         .order('created_at', { ascending: false }),
       supabase.from('room_types').select('*'),
       supabase.from('board_plans').select('*').order('price_per_person'),
@@ -44,13 +45,13 @@ export default async function ReservasPage() {
       <div className="flex items-stretch sm:items-start justify-between gap-3 mb-6">
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold mb-0.5" style={{ color: 'var(--light)' }}>
-            Reservas activas
+            Reservas de Booking
           </h1>
           <p className="text-xs sm:text-sm" style={{ color: 'var(--text-3)' }}>
-            Huéspedes alojados actualmente.
+            Huéspedes que vinieron por Booking.com.
           </p>
         </div>
-        <Link href="/reservas/nueva" className="flex">
+        <Link href="/booking/nueva" className="flex">
           <Button aria-label="Nueva reserva">
             <Icon name="plus" style="solid" size={12} color="#FFFFFF" />
             <span className="hidden sm:inline">Nueva reserva</span>

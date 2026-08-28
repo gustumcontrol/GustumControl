@@ -1,8 +1,9 @@
-import { Suspense } from 'react';
+import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { NavLinks } from '@/components/nav-links';
 import { Sidebar } from '@/components/sidebar';
+import { AppHeader } from '@/components/app-header';
+import { MobileSidebarProvider } from '@/components/mobile-sidebar-context';
 import { getHotelContext } from '@/lib/hotel-context';
 import type { Role, NavCategory } from '@/lib/types';
 
@@ -12,6 +13,7 @@ const OPERACION: NavCategory = {
     { href: '/dashboard', label: 'Habitaciones', icon: 'bed' },
     { href: '/reservas', label: 'Reservas', icon: 'clipboard-list' },
     { href: '/historial', label: 'Historial de reservas', icon: 'clock-rotate-left' },
+    { href: '/booking', label: 'Booking', icon: 'globe' },
   ],
 };
 
@@ -54,34 +56,23 @@ const ROLE_LABEL: Record<Role, string> = {
   mantenimiento: 'Mantenimiento',
 };
 
-// Las cuentas de la barra lateral, el nombre del hotel activo y la lista de
-// hoteles son lo más lento de esta página (varias consultas a Supabase) y no
-// hacen falta para pintar la estructura. Van en su propio componente async
-// para que Suspense pueda mostrar el sidebar "pelado" de inmediato y llenar
-// esto un momento después, en vez de bloquear toda la navegación — esto es
-// lo que hace que cambiar de hotel (o cualquier redirect que reejecute el
-// layout) se sienta instantáneo en vez de quedarse en blanco 1-2s.
-async function SidebarData({
-  role,
-  hotelId,
-  isAdmin,
-  userId,
-  displayName,
-  initial,
-}: {
-  role: Role;
-  hotelId: string;
-  isAdmin: boolean;
-  userId: string;
-  displayName: string;
-  initial: string;
-}) {
+// El nombre del hotel activo, la lista de hoteles y las cuentas del sidebar
+// son lo más lento de esta página (varias consultas a Supabase) y no hacen
+// falta para pintar la estructura. Viven en esta función cacheada por
+// request (React `cache`) para que Sidebar y AppHeader puedan pedirla cada
+// uno desde su propio Suspense sin duplicar la consulta — cada uno pinta
+// "pelado" de inmediato y se llena un momento después, sin bloquear
+// `<main>` (que queda totalmente afuera de ambos Suspense), en vez de
+// bloquear toda la navegación. Esto es lo que hace que cambiar de hotel (o
+// cualquier redirect que reejecute el layout) se sienta instantáneo.
+const getHotelExtras = cache(async (hotelId: string, isAdmin: boolean) => {
   const supabase = await createSupabaseServerClient();
 
   const [
     { data: hotelRow },
     { data: hotelsList },
     reservasCount,
+    bookingCount,
     limpiezaCount,
     mantenimientoCount,
   ] = await Promise.all([
@@ -98,6 +89,12 @@ async function SidebarData({
       .from('reservations')
       .select('id', { count: 'exact', head: true })
       .eq('hotel_id', hotelId)
+      .eq('status', 'ACTIVA')
+      .eq('source', 'BOOKING'),
+    supabase
+      .from('reservations')
+      .select('id', { count: 'exact', head: true })
+      .eq('hotel_id', hotelId)
       .in('cleaning_status', ['PENDIENTE', 'EN PROCESO']),
     supabase
       .from('maintenance_issues')
@@ -106,29 +103,73 @@ async function SidebarData({
       .neq('status', 'REALIZADO'),
   ]);
 
-  const COUNT_BY_HREF: Record<string, number> = {
-    '/reservas': reservasCount.count ?? 0,
-    '/limpieza': limpiezaCount.count ?? 0,
-    '/mantenimiento': mantenimientoCount.count ?? 0,
+  return {
+    hotelName: hotelRow?.name ?? '',
+    hotels: hotelsList ?? [],
+    counts: {
+      '/reservas': reservasCount.count ?? 0,
+      '/booking': bookingCount.count ?? 0,
+      '/limpieza': limpiezaCount.count ?? 0,
+      '/mantenimiento': mantenimientoCount.count ?? 0,
+    } as Record<string, number>,
   };
+});
+
+async function SidebarData({
+  role,
+  hotelId,
+  isAdmin,
+}: {
+  role: Role;
+  hotelId: string;
+  isAdmin: boolean;
+}) {
+  const { counts, hotelName, hotels } = await getHotelExtras(hotelId, isAdmin);
 
   const navCategories = (NAV_BY_ROLE[role] ?? []).map((cat) => ({
     ...cat,
     items: cat.items.map((item) => ({
       ...item,
-      count: COUNT_BY_HREF[item.href],
+      count: counts[item.href],
     })),
   }));
 
   return (
     <Sidebar
       categories={navCategories}
+      hotelId={hotelId}
+      hotelName={hotelName}
+      hotels={hotels}
+      isAdmin={isAdmin}
+    />
+  );
+}
+
+async function AppHeaderData({
+  userId,
+  hotelId,
+  isAdmin,
+  displayName,
+  roleLabel,
+  initial,
+}: {
+  userId: string;
+  hotelId: string;
+  isAdmin: boolean;
+  displayName: string;
+  roleLabel: string;
+  initial: string;
+}) {
+  const { hotelName, hotels } = await getHotelExtras(hotelId, isAdmin);
+
+  return (
+    <AppHeader
       userId={userId}
       hotelId={hotelId}
-      hotelName={hotelRow?.name ?? ''}
-      hotels={hotelsList ?? []}
+      hotelName={hotelName}
+      hotels={hotels}
       displayName={displayName}
-      roleLabel={ROLE_LABEL[role]}
+      roleLabel={roleLabel}
       initial={initial}
       isAdmin={isAdmin}
     />
@@ -185,125 +226,42 @@ export default async function AppLayout({
   // Categorías base sin contador — es lo que se ve mientras SidebarData
   // todavía está cargando las cuentas reales.
   const categoriesBase = NAV_BY_ROLE[role] ?? [];
-  const navFlat = categoriesBase.flatMap((c) => c.items);
   const displayName = fullName ?? '';
   const initial = displayName.trim().charAt(0).toUpperCase();
 
-  /* ── Versión anterior con header horizontal (comentada) ──────────────────
-     Para volver a esta versión: borra el `return` de abajo y descomenta esto.
-
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      <header
-        className="sticky top-0 z-10"
-        style={{ background: 'var(--card-c)', borderBottom: '1px solid var(--line)' }}
-      >
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
-          <div className="flex items-center gap-8">
-            <span
-              className="flex items-center gap-2 font-semibold text-sm"
-              style={{ color: 'var(--light)' }}
-            >
-              <span
-                className="w-2 h-2 rounded-full"
-                style={{ background: 'var(--accent-c)' }}
+    <MobileSidebarProvider>
+      <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
+        <Suspense fallback={<Sidebar categories={categoriesBase} />}>
+          <SidebarData role={role} hotelId={hotelId!} isAdmin={role === 'admin'} />
+        </Suspense>
+
+        <div className="flex-1 min-w-0 flex flex-col">
+          <Suspense
+            fallback={
+              <AppHeader
+                userId={userId!}
+                hotelId={hotelId!}
+                displayName={displayName}
+                roleLabel={ROLE_LABEL[role]}
+                initial={initial}
+                isAdmin={role === 'admin'}
               />
-              Hotel
-            </span>
-            <nav className="hidden sm:flex items-center gap-1">
-              <NavLinks items={nav} />
-            </nav>
-          </div>
+            }
+          >
+            <AppHeaderData
+              userId={userId!}
+              hotelId={hotelId!}
+              isAdmin={role === 'admin'}
+              displayName={displayName}
+              roleLabel={ROLE_LABEL[role]}
+              initial={initial}
+            />
+          </Suspense>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2.5">
-              <span
-                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold"
-                style={{ background: 'var(--accent-dim)', color: 'var(--accent-c)' }}
-              >
-                {initial || '?'}
-              </span>
-              <div className="leading-tight">
-                <p className="text-sm font-medium" style={{ color: 'var(--light)' }}>
-                  {displayName}
-                </p>
-                <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                  {ROLE_LABEL[role]}
-                </p>
-              </div>
-            </div>
-            <form action="/api/auth/signout" method="POST">
-              <button
-                type="submit"
-                className="text-sm px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                style={{ border: '1px solid var(--line-2)', color: 'var(--text-2)' }}
-              >
-                Salir
-              </button>
-            </form>
-          </div>
+          <main className="flex-1 max-w-[96rem] w-full mx-auto px-4 sm:px-6 pt-8 pb-8 sm:pt-5">{children}</main>
         </div>
-
-        <nav className="sm:hidden flex items-center gap-1 px-4 pb-3 overflow-x-auto">
-          <NavLinks items={nav} variant="mobile" />
-        </nav>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-6 py-8">{children}</main>
-    </div>
-  );
-  ── fin versión anterior ── */
-
-  return (
-    <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
-      <Suspense
-        fallback={
-          <Sidebar
-            categories={categoriesBase}
-            userId={userId!}
-            hotelId={hotelId!}
-            displayName={displayName}
-            roleLabel={ROLE_LABEL[role]}
-            initial={initial}
-            isAdmin={role === 'admin'}
-          />
-        }
-      >
-        <SidebarData
-          role={role}
-          hotelId={hotelId!}
-          isAdmin={role === 'admin'}
-          userId={userId!}
-          displayName={displayName}
-          initial={initial}
-        />
-      </Suspense>
-
-      <div className="flex-1 min-w-0 flex flex-col">
-        <header
-          className="sm:hidden sticky top-0 z-10"
-          style={{ background: 'var(--card-c)', borderBottom: '1px solid var(--line)' }}
-        >
-          <div className="px-4 h-14 flex items-center justify-between gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Gustum Control" className="h-6 w-auto" />
-            <form action="/api/auth/signout" method="POST">
-              <button
-                type="submit"
-                className="text-sm px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                style={{ border: '1px solid var(--line-2)', color: 'var(--text-2)' }}
-              >
-                Salir
-              </button>
-            </form>
-          </div>
-          <nav className="flex items-center gap-1 px-4 pb-3 overflow-x-auto">
-            <NavLinks items={navFlat} variant="mobile" />
-          </nav>
-        </header>
-
-        <main className="flex-1 max-w-[96rem] w-full mx-auto px-6 pt-8 pb-8 sm:pt-5">{children}</main>
       </div>
-    </div>
+    </MobileSidebarProvider>
   );
 }

@@ -17,6 +17,7 @@ import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import { Pagination } from '@/components/pagination';
 import { CustomSelect } from '@/components/custom-select';
 import { DatePicker } from '@/components/date-picker';
+import { DateRangeSheet } from '@/components/date-range-sheet';
 import { todayISOInHotelTimezone } from '@/lib/date';
 
 export type CleaningLogRow = {
@@ -223,6 +224,32 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-stretch sm:items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-semibold mb-0.5" style={{ color: 'var(--light)' }}>
+            Historial de limpieza
+          </h1>
+          <p className="text-xs sm:text-sm" style={{ color: 'var(--text-3)' }}>
+            Cambios de estado de limpieza.
+          </p>
+        </div>
+        <Button
+          type="button"
+          className="sm:hidden"
+          onClick={() => {
+            setIsExporting(true);
+            exportSessionsToXlsx(filtered).finally(() => setIsExporting(false));
+          }}
+          disabled={filtered.length === 0 || isExporting}
+          title={isExporting ? 'Exportando...' : 'Exportar a Excel'}
+          aria-label="Exportar a Excel"
+          style={{ background: 'rgba(29,111,66,0.12)', color: '#1D6F42' }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logoexcel.png" alt="Exportar a Excel" className="w-4 h-4" />
+        </Button>
+      </div>
+
       <div
         className="rounded-lg p-4 w-fit"
         style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
@@ -236,8 +263,8 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="relative shrink-0" style={{ maxWidth: '24rem', width: '100%' }}>
+        <div className="flex items-stretch gap-3 w-full sm:w-auto">
+          <div className="relative shrink-0 w-full sm:max-w-sm">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none inline-flex items-center">
               <Icon name="magnifying-glass" style="duotone" size={14} color="var(--text-3)" />
             </span>
@@ -248,6 +275,7 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
                 setQuery(e.target.value);
                 setPage(1);
               }}
+              className="text-sm"
               style={{
                 background: '#FFFFFF',
                 border: '1px solid var(--line)',
@@ -257,21 +285,22 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
           </div>
           <Button
             type="button"
+            className="hidden sm:inline-flex"
             onClick={() => {
               setIsExporting(true);
               exportSessionsToXlsx(filtered).finally(() => setIsExporting(false));
             }}
             disabled={filtered.length === 0 || isExporting}
+            title={isExporting ? 'Exportando...' : 'Exportar a Excel'}
             style={{ background: 'rgba(29,111,66,0.12)', color: '#1D6F42' }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logoexcel.png" alt="" className="w-4 h-4" />
-            {isExporting ? 'Exportando...' : 'Exportar a Excel'}
+            <img src="/logoexcel.png" alt="Exportar a Excel" className="w-4 h-4" />
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="w-52">
+        <div className="flex flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto">
+          <div className="w-44 flex items-stretch">
             <CustomSelect
               value={staffFilter}
               onChange={(v) => {
@@ -287,11 +316,21 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
             />
           </div>
 
+          <DateRangeSheet
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onApply={(from, to) => {
+              setDateFrom(from);
+              setDateTo(to);
+              setPage(1);
+            }}
+          />
+
           <div
-            className="flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap"
+            className="hidden sm:flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap"
             style={{ background: 'var(--raised)' }}
           >
-            <div className="w-32 sm:w-40">
+            <div className="w-32">
               <DatePicker
                 value={dateFrom}
                 onChange={(v) => {
@@ -307,7 +346,7 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
             <span className="text-sm" style={{ color: 'var(--text-3)' }}>
               —
             </span>
-            <div className="w-32 sm:w-40">
+            <div className="w-32">
               <DatePicker
                 value={dateTo}
                 onChange={(v) => {

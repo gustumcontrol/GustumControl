@@ -27,12 +27,6 @@ export default async function LimpiezaHistorialPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
-        Historial de limpieza
-      </h1>
-      <p className="text-sm mb-6" style={{ color: 'var(--text-3)' }}>
-        Quién cambió el estado de limpieza de cada habitación, y cuándo.
-      </p>
       <CleaningLogList entries={entries} />
     </div>
   );

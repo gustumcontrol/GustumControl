@@ -134,7 +134,7 @@ export function CustomSelect({
   const triggerText = size === 'sm' ? 'text-xs' : 'text-sm';
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative flex w-full" ref={containerRef}>
       <button
         ref={triggerRef}
         type="button"

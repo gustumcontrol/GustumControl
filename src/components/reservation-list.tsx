@@ -1,19 +1,20 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Icon } from '@/components/icon';
 import { CloseReservationButton } from '@/components/close-reservation-button';
 import { EditReservationDialog } from '@/components/edit-reservation-dialog';
-import { AddNoteDialog } from '@/components/add-note-dialog';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import { COUNTRIES } from '@/lib/countries';
+import type { RoomStatus } from '@/lib/types';
 
 type RoomTypePrice = { name: string; price_per_night: number };
 type BoardPlanPrice = { name: string; price_per_person: number };
 
 export type ReservationRow = {
   id: string;
+  room_id: string;
   guest_name: string;
   guests_count: number;
   check_in: string;
@@ -28,9 +29,15 @@ export type ReservationRow = {
   board_plan: string | null;
   payment_method: string | null;
   notes: string | null;
+  source: string;
   cleaning_status: string;
   maintenance_status: string;
   room: { number: string; floor: string; type: string } | null;
+};
+
+const SOURCE_LABEL: Record<string, string> = {
+  DIRECTO: 'Directo',
+  BOOKING: 'Booking.com',
 };
 
 const WEEKDAYS_ABBR = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
@@ -84,16 +91,16 @@ function countryName(code: string | null) {
 
 function Stat({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <div className="min-w-0">
-      <div className="flex items-center gap-1.5 mb-1">
+    <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-center gap-1.5 shrink-0">
         <Icon name={icon} style="duotone" size={11} color="var(--text-3)" className="shrink-0" />
         <span className="text-sm font-medium" style={{ color: 'var(--text-3)' }}>
           {label}
         </span>
       </div>
-      <p className="text-sm font-medium break-words" style={{ color: 'var(--light)' }}>
+      <span className="text-sm font-medium break-words" style={{ color: 'var(--light)' }}>
         {value}
-      </p>
+      </span>
     </div>
   );
 }
@@ -102,22 +109,14 @@ function ReservationCard({
   r,
   roomTypes,
   boardPlans,
+  rooms,
 }: {
   r: ReservationRow;
   roomTypes: RoomTypePrice[];
   boardPlans: BoardPlanPrice[];
+  rooms: RoomStatus[];
 }) {
   const [expanded, setExpanded] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [contentHeight, setContentHeight] = useState(0);
-
-  useEffect(() => {
-    if (expanded && contentRef.current) {
-      setContentHeight(contentRef.current.scrollHeight);
-    } else {
-      setContentHeight(0);
-    }
-  }, [expanded, r]);
 
   const location = [r.municipio, r.provincia, countryName(r.country)].filter(Boolean).join(', ');
   const status = reservationStatus(r.check_in, r.check_out);
@@ -128,6 +127,9 @@ function ReservationCard({
   ]
     .filter(Boolean)
     .join(' · ');
+  const roomTypeLine =
+    [r.room?.type, r.room?.floor ? `piso ${r.room.floor}` : null].filter(Boolean).join(' · ') ||
+    '—';
 
   return (
     <div
@@ -156,27 +158,32 @@ function ReservationCard({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpanded((v) => !v);
-            }}
-            className="sm:hidden w-8 h-8 rounded-lg flex items-center justify-center shrink-0 cursor-pointer transition-colors hover:bg-[var(--raised)]"
-            style={{ border: '1px solid var(--line)' }}
-            aria-label={expanded ? 'Contraer' : 'Expandir'}
-          >
-            <span
-              className="inline-flex transition-transform duration-300 ease-in-out"
-              style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-            >
-              <Icon name="chevron-down" style="duotone" size={11} color="var(--text-2)" />
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="sm:hidden">
+              <StatusPill status={status} />
             </span>
-          </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((v) => !v);
+              }}
+              className="sm:hidden w-8 h-8 rounded-lg flex items-center justify-center shrink-0 cursor-pointer transition-colors hover:bg-[var(--raised)]"
+              style={{ border: '1px solid var(--line)' }}
+              aria-label={expanded ? 'Contraer' : 'Expandir'}
+            >
+              <span
+                className="inline-flex transition-transform duration-300 ease-in-out"
+                style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              >
+                <Icon name="chevron-down" style="duotone" size={11} color="var(--text-2)" />
+              </span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-1 sm:grid sm:grid-cols-4 sm:items-center sm:gap-4 min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="flex flex-col gap-4 sm:flex-1 sm:grid sm:grid-cols-4 sm:items-center sm:gap-4 min-w-0">
+          <div className="flex items-center justify-between sm:justify-start gap-3 min-w-0 mt-1 sm:mt-0 p-2 sm:p-0 rounded-lg sm:rounded-none bg-[var(--raised)] sm:bg-transparent">
             <div>
               <p
                 className="text-[10px] font-medium uppercase tracking-wide leading-none mb-1"
@@ -188,8 +195,8 @@ function ReservationCard({
                 {formatDateLabel(r.check_in)}
               </p>
             </div>
-            <Icon name="arrow-right" style="duotone" size={10} color="var(--text-3)" className="mt-3" />
-            <div>
+            <Icon name="arrow-right" style="duotone" size={10} color="var(--text-3)" className="shrink-0" />
+            <div className="sm:text-left text-right">
               <p
                 className="text-[10px] font-medium uppercase tracking-wide leading-none mb-1"
                 style={{ color: 'var(--text-3)' }}
@@ -202,7 +209,7 @@ function ReservationCard({
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3 sm:contents">
+          <div className="flex items-center gap-6 sm:contents">
             <div className="sm:text-center">
               <p
                 className="text-[10px] font-medium uppercase tracking-wide leading-none mb-1 sm:hidden"
@@ -227,7 +234,7 @@ function ReservationCard({
               </p>
             </div>
 
-            <div className="flex sm:justify-end">
+            <div className="hidden sm:flex sm:justify-end">
               <StatusPill status={status} />
             </div>
           </div>
@@ -252,21 +259,28 @@ function ReservationCard({
         </button>
       </div>
 
+      {/* Acordeón con grid-template-rows en vez de altura medida en JS: se
+          ajusta solo al contenido real (nota larga, envoltura de texto,
+          etc.) sin quedar corto por una medición vieja o hecha antes de
+          tiempo — la causa del recorte que se veía en móvil. */}
       <div
-        className="overflow-hidden transition-[height] duration-300 ease-in-out"
-        style={{ height: `${contentHeight}px` }}
+        className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+          expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
       >
+        <div className="overflow-hidden">
           <div
-            ref={contentRef}
             className="px-4 pb-4 pt-4 flex flex-col gap-4"
             style={{ borderTop: '1px solid var(--line)' }}
           >
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-3">
+            <div className="flex flex-col gap-3">
+              <Stat icon="bed" label="Habitación" value={roomTypeLine} />
               <Stat icon="users" label="Huéspedes" value={String(r.guests_count)} />
               <Stat icon="phone" label="Teléfono" value={r.phone || '—'} />
               <Stat icon="location-dot" label="Ubicación" value={location || '—'} />
               <Stat icon="utensils" label="Régimen" value={r.board_plan || 'Desayuno incluido'} />
               <Stat icon="credit-card" label="Método de pago" value={r.payment_method || '—'} />
+              <Stat icon="globe" label="Origen" value={SOURCE_LABEL[r.source] ?? r.source} />
             </div>
 
             {r.notes && (
@@ -286,12 +300,17 @@ function ReservationCard({
               </div>
             )}
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
               <CloseReservationButton reservationId={r.id} guestName={r.guest_name} variant="default" />
-              <EditReservationDialog reservation={r} roomTypes={roomTypes} boardPlans={boardPlans} />
-              <AddNoteDialog reservationId={r.id} guestName={r.guest_name} notes={r.notes} />
+              <EditReservationDialog
+                reservation={r}
+                roomTypes={roomTypes}
+                boardPlans={boardPlans}
+                rooms={rooms}
+              />
             </div>
           </div>
+        </div>
       </div>
     </div>
   );
@@ -301,10 +320,12 @@ export function ReservationList({
   reservations,
   roomTypes,
   boardPlans,
+  rooms,
 }: {
   reservations: ReservationRow[];
   roomTypes: RoomTypePrice[];
   boardPlans: BoardPlanPrice[];
+  rooms: RoomStatus[];
 }) {
   useRealtimeRefresh(['reservations']);
   const [query, setQuery] = useState('');
@@ -321,7 +342,7 @@ export function ReservationList({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative max-w-sm">
+      <div className="relative sm:max-w-sm">
         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none inline-flex items-center">
           <Icon name="magnifying-glass" style="duotone" size={14} color="var(--text-3)" />
         </span>
@@ -329,6 +350,7 @@ export function ReservationList({
           placeholder="Buscar por huésped o habitación..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          className="text-sm"
           style={{ background: '#FFFFFF', border: '1px solid var(--line)', paddingLeft: '2.25rem' }}
         />
       </div>
@@ -341,7 +363,7 @@ export function ReservationList({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4 sm:gap-3">
           <div className="hidden sm:flex items-center gap-4 px-4">
             <div className="w-44 shrink-0">
               <span
@@ -381,7 +403,13 @@ export function ReservationList({
           </div>
 
           {filtered.map((r) => (
-            <ReservationCard key={r.id} r={r} roomTypes={roomTypes} boardPlans={boardPlans} />
+            <ReservationCard
+              key={r.id}
+              r={r}
+              roomTypes={roomTypes}
+              boardPlans={boardPlans}
+              rooms={rooms}
+            />
           ))}
         </div>
       )}

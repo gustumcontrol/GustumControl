@@ -1,6 +1,6 @@
 import type { Role, UserStatus } from '@/lib/types';
 
-const ROLE_STYLES: Record<Role, { bg: string; fg: string; label: string }> = {
+export const ROLE_STYLES: Record<Role, { bg: string; fg: string; label: string }> = {
   admin: { bg: 'rgba(255,107,43,0.14)', fg: '#c2410c', label: 'Admin' },
   recepcion: { bg: 'rgba(59,130,246,0.14)', fg: '#2563eb', label: 'Recepción' },
   limpieza: { bg: 'rgba(234,179,8,0.16)', fg: '#a16207', label: 'Limpieza' },

@@ -26,13 +26,13 @@ export default async function UsuariosPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+      <div className="flex items-stretch sm:items-start justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
+          <h1 className="text-xl sm:text-2xl font-semibold mb-0.5" style={{ color: 'var(--light)' }}>
             Usuarios
           </h1>
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-            Gestiona el equipo, sus roles y permisos.
+          <p className="text-xs sm:text-sm" style={{ color: 'var(--text-3)' }}>
+            Equipo, roles y permisos.
           </p>
         </div>
         <AddUserDialog />

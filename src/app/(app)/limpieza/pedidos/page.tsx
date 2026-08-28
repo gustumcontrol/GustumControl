@@ -1,9 +1,7 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { SupplyRequestList, type SupplyRequestRow } from '@/components/supply-request-list';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/icon';
+import { BackButton } from '@/components/back-button';
 import { getHotelContext } from '@/lib/hotel-context';
 import { sortByRoomNumber } from '@/lib/sort-rooms';
 
@@ -44,17 +42,7 @@ export default async function LimpiezaPedidosPage() {
 
   return (
     <div className="relative">
-      <Button
-        variant="outline"
-        render={<Link href="/limpieza" />}
-        nativeButton={false}
-        className="absolute top-0 left-0 z-10 w-fit"
-        style={{ color: '#323E51', background: '#E2E5EC', border: 'none' }}
-      >
-        <Icon name="arrow-left" style="duotone" size={12} color="#323E51" />
-        Volver
-      </Button>
-
+      <BackButton href="/limpieza" className="mb-3 sm:mb-0 sm:absolute sm:left-0 sm:top-0" />
       <div className="lg:max-w-4xl lg:mx-auto">
         <SupplyRequestList
           category="LIMPIEZA"

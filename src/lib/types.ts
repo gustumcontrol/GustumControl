@@ -450,6 +450,7 @@ export type Database = {
           provincia: string | null;
           room_number: string;
           room_type: string;
+          source: string;
           ticket: string | null;
           total: number;
           hotel_id: string;
@@ -473,6 +474,7 @@ export type Database = {
           provincia?: string | null;
           room_number: string;
           room_type: string;
+          source?: string;
           ticket?: string | null;
           total: number;
           hotel_id?: string;
@@ -496,6 +498,7 @@ export type Database = {
           provincia?: string | null;
           room_number?: string;
           room_type?: string;
+          source?: string;
           ticket?: string | null;
           total?: number;
           hotel_id?: string;
@@ -524,6 +527,7 @@ export type Database = {
           price_per_night: number;
           provincia: string | null;
           room_id: string;
+          source: string;
           status: string;
           total: number | null;
           hotel_id: string;
@@ -549,6 +553,7 @@ export type Database = {
           price_per_night: number;
           provincia?: string | null;
           room_id: string;
+          source?: string;
           status?: string;
           total?: number | null;
           hotel_id?: string;
@@ -574,6 +579,7 @@ export type Database = {
           price_per_night?: number;
           provincia?: string | null;
           room_id?: string;
+          source?: string;
           status?: string;
           total?: number | null;
           hotel_id?: string;
@@ -687,6 +693,24 @@ export type Database = {
         Args: { p_reservation_id: string };
         Returns: undefined;
       };
+      create_group_reservation: {
+        Args: {
+          p_rooms: { room_id: string; price_per_night: number }[];
+          p_guest_name: string;
+          p_guests_count: number;
+          p_check_in: string;
+          p_nights: number;
+          p_board_plan?: string | null;
+          p_payment_method?: string | null;
+          p_phone?: string | null;
+          p_country?: string | null;
+          p_municipio?: string | null;
+          p_provincia?: string | null;
+          p_notes?: string | null;
+          p_source?: string;
+        };
+        Returns: undefined;
+      };
       current_user_role: {
         Args: Record<string, never>;
         Returns: string;
@@ -795,6 +819,7 @@ export type UserStatus = "active" | "inactive" | "suspended";
 export type CleaningStatus = "NO" | "PENDIENTE" | "EN PROCESO" | "LIMPIADO";
 export type MaintenanceStatus = "NO" | "PENDIENTE" | "EN PROCESO" | "REALIZADO";
 export type MaintenancePriority = "BAJA" | "MEDIA" | "ALTA" | "URGENTE";
+export type ReservationSource = "DIRECTO" | "BOOKING";
 export type SupplyCategory = "LIMPIEZA" | "MANTENIMIENTO";
 export type SupplyStatus = "PENDIENTE" | "COMPRADO";
 export type ComputedRoomStatus =

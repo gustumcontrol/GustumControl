@@ -54,7 +54,7 @@ function TaskRow({
 
   return (
     <div
-      className="rounded-xl p-4 flex items-center gap-4"
+      className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4"
       style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
     >
       <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -80,7 +80,7 @@ function TaskRow({
         type="button"
         disabled={isPending}
         onClick={onAdvance}
-        className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+        className="shrink-0 w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         style={{ background: meta.bg, color: meta.fg }}
       >
         {meta.icon && !isPending && (

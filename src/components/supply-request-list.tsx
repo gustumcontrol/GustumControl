@@ -162,9 +162,9 @@ function AddSupplyRequestDialog({
         if (!next) reset();
       }}
     >
-      <DialogTrigger render={<Button />}>
+      <DialogTrigger render={<Button aria-label="Añadir pedido" />}>
         <Icon name="cart-plus" style="solid" size={13} color="#FFFFFF" />
-        Añadir pedido
+        <span className="hidden sm:inline">Añadir pedido</span>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -274,9 +274,9 @@ export function SupplyRequestList({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
+      <div className="flex items-stretch sm:items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-0.5" style={{ color: 'var(--light)' }}>
             {meta.title}
             {requests.length > 0 && (
               <span className="ml-2 text-sm font-normal" style={{ color: 'var(--text-3)' }}>
@@ -284,11 +284,11 @@ export function SupplyRequestList({
               </span>
             )}
           </h2>
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+          <p className="text-xs sm:text-sm" style={{ color: 'var(--text-3)' }}>
             {meta.subtitle}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-stretch gap-2 shrink-0">
           <Button
             type="button"
             onClick={() => {
@@ -298,15 +298,16 @@ export function SupplyRequestList({
               );
             }}
             disabled={requests.length === 0 || isExporting}
+            title={isExporting ? 'Exportando...' : 'Exportar a Excel'}
+            aria-label="Exportar a Excel"
             style={{ background: 'rgba(29,111,66,0.12)', color: '#1D6F42' }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logoexcel.png" alt="" className="w-4 h-4" />
-            {isExporting ? 'Exportando...' : 'Exportar a Excel'}
+            <img src="/logoexcel.png" alt="Exportar a Excel" className="w-4 h-4" />
           </Button>
           <Button render={<Link href={meta.historyPath} />} nativeButton={false}>
             <Icon name="clock-rotate-left" style="solid" size={12} color="#FFFFFF" />
-            Historial
+            <span className="hidden sm:inline">Historial</span>
           </Button>
           <AddSupplyRequestDialog category={category} rooms={rooms} />
         </div>

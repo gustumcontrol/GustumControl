@@ -41,7 +41,7 @@ export function CloseReservationButton({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant={variant} size="sm" />}>
+      <DialogTrigger render={<Button variant={variant} className="w-full sm:w-auto" />}>
         <Icon name="door-open" style="duotone" size={12} />
         Cerrar reserva
       </DialogTrigger>
