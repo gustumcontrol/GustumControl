@@ -31,10 +31,12 @@ export function NotificationsBell({
   userId,
   hotelId,
   collapsed = false,
+  variant = 'sidebar',
 }: {
   userId: string;
   hotelId: string;
   collapsed?: boolean;
+  variant?: 'sidebar' | 'header';
 }) {
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -137,6 +139,126 @@ export function NotificationsBell({
     const route = TYPE_ROUTE[n.type];
     if (route) router.push(route);
   };
+
+  if (variant === 'header') {
+    return (
+      <div className="relative flex" ref={containerRef}>
+        <button
+          type="button"
+          title="Notificaciones"
+          onClick={() => setOpen((o) => !o)}
+          className="relative w-10 sm:w-11 rounded-lg flex items-center justify-center cursor-pointer transition-colors bg-[var(--raised)]"
+        >
+          <Icon name="bell" style="duotone" size={16} color="var(--text-3)" />
+          {unreadCount > 0 && (
+            <span
+              className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+              style={{ background: 'var(--accent-c)' }}
+            />
+          )}
+        </button>
+
+        {open && (
+          <div
+            className="fixed sm:absolute right-4 sm:right-0 top-16 sm:top-full mt-0 sm:mt-2 w-80 max-w-[calc(100vw-2rem)] max-h-[28rem] rounded-lg shadow-2xl z-50 flex flex-col overflow-hidden origin-top-right"
+            style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
+          >
+            <div
+              className="px-4 py-3 flex items-center justify-between shrink-0"
+              style={{ background: '#FFFFFF' }}
+            >
+              <h3 className="text-sm font-semibold" style={{ color: 'var(--light)' }}>
+                Notificaciones
+              </h3>
+              {unreadCount > 0 && (
+                <span
+                  className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
+                  style={{ color: 'var(--accent-c)', background: 'var(--accent-dim)' }}
+                >
+                  {unreadCount} nueva{unreadCount === 1 ? '' : 's'}
+                </span>
+              )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-2" style={{ background: '#FFFFFF' }}>
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-8 text-center">
+                  <Icon name="bell-slash" style="duotone" size={26} color="var(--text-3)" />
+                  <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+                    No hay notificaciones todavía.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {notifications.map((n) => {
+                    const isUnread = !readIds.has(n.id);
+                    const clickable = !!TYPE_ROUTE[n.type];
+                    return (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => (clickable ? handleNotificationClick(n) : markRead(n.id))}
+                        className="w-full text-left px-3 py-2.5 flex gap-3 rounded-lg cursor-pointer transition-colors"
+                        style={{ background: isUnread ? 'var(--accent-dim)' : 'transparent' }}
+                      >
+                        <div
+                          className="mt-0.5 shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                          style={{ background: 'var(--raised)' }}
+                        >
+                          <Icon
+                            name={TYPE_ICON[n.type] ?? 'bell'}
+                            style="duotone"
+                            size={13}
+                            color={isUnread ? 'var(--accent-c)' : 'var(--text-3)'}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className="text-[13px] leading-tight line-clamp-2"
+                            style={{
+                              color: isUnread ? 'var(--light)' : 'var(--text-2)',
+                              fontWeight: isUnread ? 600 : 400,
+                            }}
+                          >
+                            {n.message}
+                          </p>
+                          <p className="text-[11px] mt-1" style={{ color: 'var(--text-3)' }}>
+                            {relativeTime(n.created_at)}
+                          </p>
+                        </div>
+                        {isUnread && (
+                          <span
+                            className="w-2 h-2 rounded-full mt-2 shrink-0"
+                            style={{ background: 'var(--accent-c)' }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {unreadCount > 0 && (
+              <div
+                className="px-4 py-2 flex justify-center shrink-0"
+                style={{ background: '#FFFFFF' }}
+              >
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  className="text-[11px] font-bold uppercase tracking-widest py-1 cursor-pointer"
+                  style={{ color: 'var(--accent-c)' }}
+                >
+                  Marcar todas como leídas
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="relative pb-1 px-3" ref={containerRef}>

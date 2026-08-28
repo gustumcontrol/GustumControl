@@ -1,17 +1,17 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { Input } from '@/components/ui/input';
 import { Icon } from '@/components/icon';
 import { Button } from '@/components/ui/button';
 import { CustomSelect } from '@/components/custom-select';
-import { RoleBadge, STATUS_STYLES } from '@/components/user-badges';
+import { RoleBadge, ROLE_STYLES, STATUS_STYLES } from '@/components/user-badges';
 import { EditUserDialog } from '@/components/edit-user-dialog';
 import { DeleteUserButton } from '@/components/delete-user-button';
 import { UserActivityDialog } from '@/components/user-activity-dialog';
 import { updateUserStatus } from '@/lib/actions/users';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
-import type { Profile, UserStatus } from '@/lib/types';
+import type { Profile, Role, UserStatus } from '@/lib/types';
 
 const FILTERS: { value: 'all' | UserStatus; label: string }[] = [
   { value: 'all', label: 'Todos' },
@@ -72,6 +72,115 @@ function StatusSelect({ user, disabled }: { user: Profile; disabled: boolean }) 
   );
 }
 
+function UserCard({
+  user,
+  isSelf,
+  onEdit,
+  onActivity,
+}: {
+  user: Profile;
+  isSelf: boolean;
+  onEdit: () => void;
+  onActivity: () => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const roleStyle = ROLE_STYLES[user.role as Role] ?? { bg: 'var(--raised)', fg: 'var(--text-2)' };
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
+
+  return (
+    <div
+      className="flex items-center gap-3 rounded-lg p-3"
+      style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
+    >
+      <span
+        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0"
+        style={{ background: roleStyle.bg, color: roleStyle.fg }}
+      >
+        {initials(user.full_name) || '?'}
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold truncate" style={{ color: 'var(--light)' }}>
+          {user.full_name}
+          {isSelf && (
+            <span className="ml-1.5 text-xs font-normal" style={{ color: 'var(--text-3)' }}>
+              tú
+            </span>
+          )}
+        </p>
+        <div className="flex items-center gap-1.5 text-xs mt-0.5 min-w-0">
+          <RoleBadge role={user.role} />
+          <span className="truncate" style={{ color: 'var(--text-3)' }}>
+            {user.department || 'Sin depto.'} · {relativeTime(user.last_active)}
+          </span>
+        </div>
+      </div>
+
+      <div className="relative shrink-0" ref={menuRef}>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label="Más acciones"
+          className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer"
+          style={{ background: 'var(--raised)' }}
+        >
+          <Icon name="ellipsis" style="solid" size={14} color="var(--text-2)" />
+        </button>
+
+        {menuOpen && (
+          <div
+            className="absolute top-full right-0 mt-1 w-44 rounded-lg shadow-2xl z-20 p-1.5 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-150"
+            style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                onEdit();
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left cursor-pointer transition-colors hover:bg-[var(--raised)]"
+              style={{ color: 'var(--text-2)' }}
+            >
+              <Icon name="pen" style="duotone" size={14} color="var(--text-3)" className="shrink-0" />
+              Editar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                onActivity();
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left cursor-pointer transition-colors hover:bg-[var(--raised)]"
+              style={{ color: 'var(--text-2)' }}
+            >
+              <Icon
+                name="clock-rotate-left"
+                style="duotone"
+                size={14}
+                color="var(--text-3)"
+                className="shrink-0"
+              />
+              Actividades
+            </button>
+            {!isSelf && <DeleteUserButton userId={user.id} name={user.full_name} menuItem />}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function UsersTable({
   users,
   currentUserId,
@@ -101,7 +210,7 @@ export function UsersTable({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative shrink-0" style={{ maxWidth: '28rem', width: '100%' }}>
+        <div className="relative shrink-0 w-full sm:max-w-md">
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none inline-flex items-center">
             <Icon name="magnifying-glass" style="duotone" size={14} color="var(--text-3)" />
           </span>
@@ -109,6 +218,7 @@ export function UsersTable({
             placeholder="Buscar por nombre, email o departamento..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            className="text-sm"
             style={{
               background: '#FFFFFF',
               border: '1px solid var(--line)',
@@ -145,8 +255,21 @@ export function UsersTable({
           </p>
         </div>
       ) : (
-        <div
-          className="rounded-lg overflow-hidden"
+        <>
+          <div className="flex flex-col gap-3 sm:hidden">
+            {filtered.map((u) => (
+              <UserCard
+                key={u.id}
+                user={u}
+                isSelf={u.id === currentUserId}
+                onEdit={() => setEditingUser(u)}
+                onActivity={() => setActivityUser(u)}
+              />
+            ))}
+          </div>
+
+          <div
+          className="hidden sm:block rounded-lg overflow-hidden"
           style={{ border: '1px solid var(--line)', background: 'var(--card-c)' }}
         >
           <table className="w-full text-sm">
@@ -219,7 +342,8 @@ export function UsersTable({
               })}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
 
       {editingUser && (

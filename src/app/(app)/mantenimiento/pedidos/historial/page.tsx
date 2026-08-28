@@ -1,12 +1,10 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import {
   SupplyRequestHistoryList,
   type SupplyRequestHistoryRow,
 } from '@/components/supply-request-history-list';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/icon';
+import { BackButton } from '@/components/back-button';
 import { getHotelContext } from '@/lib/hotel-context';
 
 export default async function MantenimientoPedidosHistorialPage() {
@@ -41,24 +39,8 @@ export default async function MantenimientoPedidosHistorialPage() {
 
   return (
     <div className="relative">
-      <Button
-        variant="outline"
-        render={<Link href="/mantenimiento/pedidos" />}
-        nativeButton={false}
-        className="absolute top-0 left-0 z-10 w-fit"
-        style={{ color: '#323E51', background: '#E2E5EC', border: 'none' }}
-      >
-        <Icon name="arrow-left" style="duotone" size={12} color="#323E51" />
-        Volver
-      </Button>
-
-      <div className="pt-16">
-        <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
-          Historial de pedidos de mantenimiento
-        </h1>
-        <p className="text-sm mb-6" style={{ color: 'var(--text-3)' }}>
-          Pedidos ya comprados: quién los pidió, quién los compró, y cuándo.
-        </p>
+      <BackButton href="/mantenimiento/pedidos" className="mb-3 sm:mb-0 sm:absolute sm:left-0 sm:top-0" />
+      <div className="lg:max-w-5xl lg:mx-auto">
         <SupplyRequestHistoryList category="MANTENIMIENTO" entries={entries} />
       </div>
     </div>

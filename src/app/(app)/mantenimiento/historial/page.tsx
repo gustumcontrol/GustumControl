@@ -37,12 +37,6 @@ export default async function MantenimientoHistorialPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
-        Historial de mantenimiento
-      </h1>
-      <p className="text-sm mb-6" style={{ color: 'var(--text-3)' }}>
-        Incidencias ya resueltas: quién las reportó, quién las resolvió, y cuándo.
-      </p>
       <MaintenanceIssuesHistoryList entries={entries} />
     </div>
   );

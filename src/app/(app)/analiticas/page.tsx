@@ -74,10 +74,10 @@ export default async function AnaliticasPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
+        <h1 className="text-xl sm:text-2xl font-semibold mb-0.5" style={{ color: 'var(--light)' }}>
           Analíticas
         </h1>
-        <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+        <p className="text-xs sm:text-sm" style={{ color: 'var(--text-3)' }}>
           Rendimiento del hotel: ingresos, ocupación y operación.
         </p>
       </div>

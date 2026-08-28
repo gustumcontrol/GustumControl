@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CustomSelect } from '@/components/custom-select';
+import { Icon } from '@/components/icon';
 import { openMaintenanceIssue } from '@/lib/actions/maintenance';
 import { supabase } from '@/lib/supabase/client';
 import { PRIORITY_META, PRIORITY_OPTIONS } from '@/lib/maintenance-priority';
@@ -97,7 +98,10 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
         if (!next) reset();
       }}
     >
-      <DialogTrigger render={<Button />}>Reportar incidencia</DialogTrigger>
+      <DialogTrigger render={<Button aria-label="Reportar incidencia" />}>
+        <Icon name="plus" style="solid" size={12} color="#FFFFFF" />
+        <span className="hidden sm:inline">Reportar incidencia</span>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Reportar incidencia de mantenimiento</DialogTitle>
@@ -135,8 +139,8 @@ export function AddMaintenanceIssueDialog({ rooms }: { rooms: RoomOption[] }) {
             />
           </div>
 
-          <div className="flex gap-3 min-w-0">
-            <div className="flex flex-col gap-1.5 w-32 shrink-0">
+          <div className="flex flex-col sm:flex-row gap-3 min-w-0">
+            <div className="flex flex-col gap-1.5 sm:w-32 sm:shrink-0">
               <Label>Prioridad</Label>
               <CustomSelect
                 value={priority}

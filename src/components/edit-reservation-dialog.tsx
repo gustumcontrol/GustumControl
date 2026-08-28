@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Icon } from '@/components/icon';
 import { CountrySelect } from '@/components/country-select';
 import { CustomSelect } from '@/components/custom-select';
@@ -23,6 +24,7 @@ import { updateReservation } from '@/lib/actions/reservations';
 import { PROVINCES_BY_COUNTRY } from '@/lib/provinces';
 import { DOBLE_INDIVIDUAL_PRICE } from '@/lib/pricing';
 import type { ReservationRow } from '@/components/reservation-list';
+import type { ReservationSource, RoomStatus } from '@/lib/types';
 
 type RoomTypePrice = { name: string; price_per_night: number };
 type BoardPlanPrice = { name: string; price_per_person: number };
@@ -31,12 +33,18 @@ export function EditReservationDialog({
   reservation,
   roomTypes,
   boardPlans,
+  rooms,
 }: {
   reservation: ReservationRow;
   roomTypes: RoomTypePrice[];
   boardPlans: BoardPlanPrice[];
+  rooms: RoomStatus[];
 }) {
   const [open, setOpen] = useState(false);
+  const [roomId, setRoomId] = useState(reservation.room_id);
+  const [source, setSource] = useState<ReservationSource>(
+    (reservation.source as ReservationSource) ?? 'DIRECTO'
+  );
   const [guestName, setGuestName] = useState(reservation.guest_name);
   const [guestsCount, setGuestsCount] = useState(reservation.guests_count);
   const [checkIn, setCheckIn] = useState(reservation.check_in);
@@ -52,8 +60,27 @@ export function EditReservationDialog({
   const [country, setCountry] = useState(reservation.country ?? '');
   const [municipio, setMunicipio] = useState(reservation.municipio ?? '');
   const [provincia, setProvincia] = useState(reservation.provincia ?? '');
+  const [notes, setNotes] = useState(reservation.notes ?? '');
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
+
+  // La habitación actual de la reserva no aparece en `rooms` (esa lista
+  // trae solo las libres/reservadas) — hay que agregarla a mano a las
+  // opciones para que siga seleccionable y quede marcada como valor
+  // inicial.
+  const roomOptions = useMemo(() => {
+    const map = new Map(rooms.map((r) => [r.room_id, r]));
+    if (reservation.room && !map.has(reservation.room_id)) {
+      map.set(reservation.room_id, {
+        room_id: reservation.room_id,
+        number: reservation.room.number,
+        floor: reservation.room.floor,
+        type: reservation.room.type,
+        computed_status: 'OCUPADA',
+      } as RoomStatus);
+    }
+    return [...map.values()];
+  }, [rooms, reservation]);
 
   const priceByType = useMemo(
     () => new Map(roomTypes.map((t) => [t.name, t.price_per_night])),
@@ -64,12 +91,13 @@ export function EditReservationDialog({
     [boardPlans]
   );
 
-  const isDoble = reservation.room?.type === 'Doble';
-  const basePrice = !reservation.room?.type
+  const selectedRoom = roomOptions.find((r) => r.room_id === roomId);
+  const isDoble = selectedRoom?.type === 'Doble';
+  const basePrice = !selectedRoom?.type
     ? 0
     : isDoble && dobleOccupancy === 'individual'
       ? DOBLE_INDIVIDUAL_PRICE
-      : priceByType.get(reservation.room.type) ?? 0;
+      : priceByType.get(selectedRoom.type) ?? 0;
   const price = boardPlan
     ? (boardPriceByName.get(boardPlan) ?? 0) * (Number(guestsCount) || 0)
     : basePrice;
@@ -88,6 +116,8 @@ export function EditReservationDialog({
   }, [checkIn, nights]);
 
   const resetToOriginal = () => {
+    setRoomId(reservation.room_id);
+    setSource((reservation.source as ReservationSource) ?? 'DIRECTO');
     setGuestName(reservation.guest_name);
     setGuestsCount(reservation.guests_count);
     setCheckIn(reservation.check_in);
@@ -103,6 +133,7 @@ export function EditReservationDialog({
     setCountry(reservation.country ?? '');
     setMunicipio(reservation.municipio ?? '');
     setProvincia(reservation.provincia ?? '');
+    setNotes(reservation.notes ?? '');
     setError('');
   };
 
@@ -110,6 +141,10 @@ export function EditReservationDialog({
     e.preventDefault();
     setError('');
 
+    if (!roomId) {
+      setError('Falta seleccionar la habitación.');
+      return;
+    }
     if (!guestName.trim()) {
       setError('Falta el nombre del huésped.');
       return;
@@ -121,6 +156,7 @@ export function EditReservationDialog({
 
     startTransition(async () => {
       const result = await updateReservation(reservation.id, {
+        roomId,
         guestName,
         guestsCount: Number(guestsCount),
         checkIn,
@@ -132,6 +168,8 @@ export function EditReservationDialog({
         country: country || undefined,
         municipio: municipio || undefined,
         provincia: provincia || undefined,
+        notes: notes || undefined,
+        source,
       });
 
       if (result?.error) {
@@ -151,7 +189,7 @@ export function EditReservationDialog({
         if (o) resetToOriginal();
       }}
     >
-      <DialogTrigger render={<Button size="sm" variant="outline" />}>
+      <DialogTrigger render={<Button variant="outline" className="w-full sm:w-auto" />}>
         <Icon name="pen" style="duotone" size={12} />
         Editar reserva
       </DialogTrigger>
@@ -166,6 +204,35 @@ export function EditReservationDialog({
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label>Habitación</Label>
+            <CustomSelect
+              value={roomId}
+              onChange={(v) => {
+                setRoomId(v);
+                setDobleOccupancy('doble');
+              }}
+              searchable
+              searchPlaceholder="Buscar habitación..."
+              options={roomOptions.map((room) => ({
+                value: room.room_id!,
+                label: `${room.number} · ${room.type} (piso ${room.floor})`,
+              }))}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>Origen</Label>
+            <CustomSelect
+              value={source}
+              onChange={(v) => setSource(v as ReservationSource)}
+              options={[
+                { value: 'DIRECTO', label: 'Directo' },
+                { value: 'BOOKING', label: 'Booking.com' },
+              ]}
+            />
+          </div>
+
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-guestName">Nombre del huésped</Label>
             <Input
@@ -284,6 +351,7 @@ export function EditReservationDialog({
                 options={[
                   { value: 'Efectivo', label: 'Efectivo' },
                   { value: 'Tarjeta', label: 'Tarjeta' },
+                  { value: 'Transferencia', label: 'Transferencia' },
                 ]}
               />
             </div>
@@ -295,6 +363,16 @@ export function EditReservationDialog({
           >
             <span>Salida: {checkOut || '—'}</span>
             <span>Total: ${total.toFixed(2)}</span>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="edit-notes">Notas</Label>
+            <Textarea
+              id="edit-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Ej: llegó pasada la medianoche, pide que no se limpie antes de las 11:00."
+            />
           </div>
 
           <DialogFooter>

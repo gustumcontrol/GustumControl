@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/icon';
 import { DatePicker } from '@/components/date-picker';
+import { DateRangeSheet } from '@/components/date-range-sheet';
 import { Pagination } from '@/components/pagination';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import { updateReservationHistoryTicket } from '@/lib/actions/reservations';
@@ -89,6 +90,22 @@ function TicketCell({ id, ticket }: { id: string; ticket: string | null }) {
   );
 }
 
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      className="rounded-lg p-4"
+      style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
+    >
+      <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>
+        {label}
+      </p>
+      <p className="text-2xl font-semibold" style={{ color: 'var(--light)' }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
 export function ReservationHistoryList({ entries }: { entries: ReservationHistory[] }) {
   useRealtimeRefresh(['reservation_history']);
   const [query, setQuery] = useState('');
@@ -98,6 +115,9 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
   const [isExporting, setIsExporting] = useState(false);
   const [pageSize, setPageSize] = useState(20);
   const [page, setPage] = useState(1);
+
+  const totalNights = entries.reduce((sum, e) => sum + e.nights, 0);
+  const totalIncome = entries.reduce((sum, e) => sum + Number(e.total), 0);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -119,9 +139,41 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-stretch sm:items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-semibold mb-0.5" style={{ color: 'var(--light)' }}>
+            Historial de reservas
+          </h1>
+          <p className="text-xs sm:text-sm" style={{ color: 'var(--text-3)' }}>
+            Reservas ya cerradas.
+          </p>
+        </div>
+        <Button
+          type="button"
+          className="sm:hidden"
+          onClick={() => {
+            setIsExporting(true);
+            exportEntriesToXlsx(filtered).finally(() => setIsExporting(false));
+          }}
+          disabled={filtered.length === 0 || isExporting}
+          title={isExporting ? 'Exportando...' : 'Exportar a Excel'}
+          aria-label="Exportar a Excel"
+          style={{ background: 'rgba(29,111,66,0.12)', color: '#1D6F42' }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logoexcel.png" alt="Exportar a Excel" className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard label="Reservas finalizadas" value={entries.length.toString()} />
+        <StatCard label="Noches alojadas" value={totalNights.toString()} />
+        <StatCard label="Ingresos totales" value={`$${totalIncome.toFixed(2)}`} />
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="relative shrink-0" style={{ maxWidth: '24rem', width: '100%' }}>
+        <div className="flex items-stretch gap-3 w-full sm:w-auto">
+          <div className="relative shrink-0 w-full sm:max-w-sm">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none inline-flex items-center">
               <Icon name="magnifying-glass" style="duotone" size={14} color="var(--text-3)" />
             </span>
@@ -132,6 +184,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
                 setQuery(e.target.value);
                 setPage(1);
               }}
+              className="text-sm"
               style={{
                 background: '#FFFFFF',
                 border: '1px solid var(--line)',
@@ -141,20 +194,21 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
           </div>
           <Button
             type="button"
+            className="hidden sm:inline-flex"
             onClick={() => {
               setIsExporting(true);
               exportEntriesToXlsx(filtered).finally(() => setIsExporting(false));
             }}
             disabled={filtered.length === 0 || isExporting}
+            title={isExporting ? 'Exportando...' : 'Exportar a Excel'}
             style={{ background: 'rgba(29,111,66,0.12)', color: '#1D6F42' }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logoexcel.png" alt="" className="w-4 h-4" />
-            {isExporting ? 'Exportando...' : 'Exportar a Excel'}
+            <img src="/logoexcel.png" alt="Exportar a Excel" className="w-4 h-4" />
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <div
             className="flex items-center gap-1 rounded-lg p-1 max-w-full overflow-x-auto"
             style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
@@ -178,11 +232,21 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
             ))}
           </div>
 
+          <DateRangeSheet
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onApply={(from, to) => {
+              setDateFrom(from);
+              setDateTo(to);
+              setPage(1);
+            }}
+          />
+
           <div
-            className="flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap"
+            className="hidden sm:flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap"
             style={{ background: 'var(--raised)' }}
           >
-            <div className="w-32 sm:w-40">
+            <div className="w-32">
               <DatePicker
                 value={dateFrom}
                 onChange={(v) => {
@@ -198,7 +262,7 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
             <span className="text-sm" style={{ color: 'var(--text-3)' }}>
               —
             </span>
-            <div className="w-32 sm:w-40">
+            <div className="w-32">
               <DatePicker
                 value={dateTo}
                 onChange={(v) => {

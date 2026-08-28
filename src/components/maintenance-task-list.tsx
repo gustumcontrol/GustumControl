@@ -90,7 +90,7 @@ function IssueRow({
           onOpenDetail();
         }
       }}
-      className="w-full text-left rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-shadow hover:shadow-md"
+      className="w-full text-left rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 cursor-pointer transition-shadow hover:shadow-md"
       style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
     >
       <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -139,7 +139,7 @@ function IssueRow({
         </div>
       )}
 
-      <div className="shrink-0 w-32" onClick={(e) => e.stopPropagation()}>
+      <div className="shrink-0 w-full sm:w-32" onClick={(e) => e.stopPropagation()}>
         <CustomSelect
           value={optimisticPriority}
           onChange={(v) => {
@@ -159,7 +159,7 @@ function IssueRow({
           onAdvance();
         }}
         disabled={isPending}
-        className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+        className="shrink-0 w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         style={{ background: meta.bg, color: meta.fg }}
       >
         {meta.icon && !isPending && (

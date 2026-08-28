@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CustomSelect } from '@/components/custom-select';
+import { Icon } from '@/components/icon';
 import { adminCreateUser } from '@/lib/actions/users';
 import type { Role } from '@/lib/types';
 
@@ -74,7 +75,10 @@ export function AddUserDialog() {
         if (!next) reset();
       }}
     >
-      <DialogTrigger render={<Button />}>Agregar usuario</DialogTrigger>
+      <DialogTrigger render={<Button aria-label="Agregar usuario" />}>
+        <Icon name="plus" style="solid" size={12} color="#FFFFFF" />
+        <span className="hidden sm:inline">Agregar usuario</span>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Agregar usuario</DialogTitle>

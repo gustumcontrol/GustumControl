@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Icon } from '@/components/icon';
 import { DatePicker } from '@/components/date-picker';
+import { DateRangeSheet } from '@/components/date-range-sheet';
 import { Input } from '@/components/ui/input';
 import { getUserActivity } from '@/lib/actions/activity';
 import { ACTION_META, dayKey, formatDayHeader, formatTime } from '@/lib/activity-meta';
@@ -91,14 +92,26 @@ export function UserActivityDialog({
               placeholder="Buscar en la actividad..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              className="text-sm"
               style={{ paddingLeft: '2.25rem' }}
             />
           </div>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <DateRangeSheet
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              onApply={(from, to) => {
+                setDateFrom(from);
+                setDateTo(to);
+              }}
+            />
+          </div>
+
           <div
-            className="flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap"
+            className="hidden sm:flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap"
             style={{ background: 'var(--raised)' }}
           >
-            <div className="w-32 sm:w-40">
+            <div className="w-32">
               <DatePicker
                 value={dateFrom}
                 onChange={(v) => {
@@ -113,7 +126,7 @@ export function UserActivityDialog({
             <span className="text-sm" style={{ color: 'var(--text-3)' }}>
               —
             </span>
-            <div className="w-32 sm:w-40">
+            <div className="w-32">
               <DatePicker
                 value={dateTo}
                 onChange={setDateTo}

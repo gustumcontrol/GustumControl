@@ -48,19 +48,19 @@ export default async function MantenimientoPage() {
 
   return (
     <div className="lg:max-w-4xl lg:mx-auto">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+      <div className="flex items-stretch sm:items-start justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--light)' }}>
+          <h1 className="text-xl sm:text-2xl font-semibold mb-0.5" style={{ color: 'var(--light)' }}>
             Mantenimiento pendiente
           </h1>
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-            Incidencias abiertas que hay que resolver.
+          <p className="text-xs sm:text-sm" style={{ color: 'var(--text-3)' }}>
+            Incidencias abiertas por resolver.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-stretch gap-2 shrink-0">
           <Button render={<Link href="/mantenimiento/pedidos" />} nativeButton={false}>
             <Icon name="cart-shopping" style="solid" size={12} color="#FFFFFF" />
-            Pedidos
+            <span className="hidden sm:inline">Pedidos</span>
           </Button>
           <AddMaintenanceIssueDialog rooms={availableRooms} />
         </div>

@@ -86,6 +86,7 @@ export async function updateSession(request: NextRequest) {
     '/hoteles',
     '/dashboard',
     '/reservas',
+    '/booking',
     '/historial',
     '/limpieza',
     '/mantenimiento',
