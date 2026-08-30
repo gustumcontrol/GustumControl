@@ -34,7 +34,7 @@ type FieldErrors = Partial<
     | 'municipio'
     | 'provincia'
     | 'checkIn'
-    | 'nights'
+    | 'checkOut'
     | 'paymentMethod'
     | 'notes',
     string
@@ -81,7 +81,11 @@ export function ReservationForm({
   const [guestsCount, setGuestsCount] = useState(1);
   const todayISO = useMemo(() => todayISOInHotelTimezone(), []);
   const [checkIn, setCheckIn] = useState(() => todayISOInHotelTimezone());
-  const [nights, setNights] = useState(1);
+  const [checkOut, setCheckOut] = useState(() => {
+    const d = new Date(todayISOInHotelTimezone());
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0, 10);
+  });
   const [boardPlan, setBoardPlan] = useState('');
   const [dobleOccupancy, setDobleOccupancy] = useState<Occupancy>('doble');
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -127,12 +131,22 @@ export function ReservationForm({
     [country]
   );
 
-  const checkOut = useMemo(() => {
-    if (!checkIn || !nights) return '';
+  // Las noches se cuentan a partir de entrada/salida (ya no se eligen a
+  // mano) — se muestran nada más como referencia para quien hace la reserva.
+  const nights = useMemo(() => {
+    if (!checkIn || !checkOut) return 0;
+    const diffDays = Math.round(
+      (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000
+    );
+    return diffDays > 0 ? diffDays : 0;
+  }, [checkIn, checkOut]);
+
+  const minCheckOut = useMemo(() => {
+    if (!checkIn) return undefined;
     const d = new Date(checkIn);
-    d.setDate(d.getDate() + Number(nights));
+    d.setDate(d.getDate() + 1);
     return d.toISOString().slice(0, 10);
-  }, [checkIn, nights]);
+  }, [checkIn]);
 
   const extraRoomsPriceSum = extraRooms.reduce(
     (sum, r) => sum + roomPrice(rooms.find((room) => room.room_id === r.roomId), r.occupancy),
@@ -188,7 +202,9 @@ export function ReservationForm({
     if (!provincia) errors.provincia = 'Falta seleccionar la provincia.';
     if (!checkIn) errors.checkIn = 'Falta la fecha de entrada.';
     else if (checkIn < todayISO) errors.checkIn = 'La fecha de entrada no puede ser anterior a hoy.';
-    if (!nights || nights < 1) errors.nights = 'Falta la cantidad de noches.';
+    if (!checkOut) errors.checkOut = 'Falta la fecha de salida.';
+    else if (checkIn && checkOut <= checkIn)
+      errors.checkOut = 'La fecha de salida debe ser posterior a la entrada.';
     if (!paymentMethod) errors.paymentMethod = 'Falta seleccionar el método de pago.';
     return errors;
   };
@@ -494,6 +510,13 @@ export function ReservationForm({
             onChange={(v) => {
               setCheckIn(v);
               if (v && v >= todayISO) clearFieldError('checkIn');
+              // Si la salida quedó igual o antes que la nueva entrada, la
+              // corremos un día después para que el rango siga siendo válido.
+              if (v && checkOut && v >= checkOut) {
+                const d = new Date(v);
+                d.setDate(d.getDate() + 1);
+                setCheckOut(d.toISOString().slice(0, 10));
+              }
             }}
             minDate={todayISO}
             invalid={!!fieldErrors.checkIn}
@@ -501,17 +524,24 @@ export function ReservationForm({
           <FieldError message={fieldErrors.checkIn} />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="nights">Noches</Label>
-          <NumberSelect
-            id="nights"
-            value={nights}
+          <Label htmlFor="checkOut">Salida</Label>
+          <DatePicker
+            id="checkOut"
+            value={checkOut}
             onChange={(v) => {
-              setNights(v);
-              if (v >= 1) clearFieldError('nights');
+              setCheckOut(v);
+              if (v && checkIn && v > checkIn) clearFieldError('checkOut');
             }}
-            invalid={!!fieldErrors.nights}
+            minDate={minCheckOut}
+            invalid={!!fieldErrors.checkOut}
           />
-          <FieldError message={fieldErrors.nights} />
+          {fieldErrors.checkOut ? (
+            <FieldError message={fieldErrors.checkOut} />
+          ) : (
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+              {nights} noche{nights === 1 ? '' : 's'}
+            </p>
+          )}
         </div>
       </div>
 

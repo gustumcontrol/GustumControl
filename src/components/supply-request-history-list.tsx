@@ -189,7 +189,7 @@ export function SupplyRequestHistoryList({
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto sm:ml-auto">
           <div className="w-44 flex items-stretch">
             <CustomSelect
               value={staffFilter}
@@ -216,54 +216,56 @@ export function SupplyRequestHistoryList({
             }}
           />
 
-          <div
-            className="hidden sm:flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap"
-            style={{ background: 'var(--raised)' }}
-          >
-            <div className="w-32">
-              <DatePicker
-                value={dateFrom}
-                onChange={(v) => {
-                  setDateFrom(v);
-                  if (dateTo && v > dateTo) setDateTo('');
-                  setPage(1);
-                }}
-                placeholder="Desde"
-                triggerBackground="var(--card-c)"
-                triggerBorderColor="var(--line)"
-              />
+          <div className="hidden sm:block">
+            <div
+              className="relative flex items-center gap-2 rounded-lg py-2"
+              style={{ background: 'var(--raised)' }}
+            >
+              <div className="w-32">
+                <DatePicker
+                  value={dateFrom}
+                  onChange={(v) => {
+                    setDateFrom(v);
+                    if (dateTo && v > dateTo) setDateTo('');
+                    setPage(1);
+                  }}
+                  placeholder="Desde"
+                  triggerBackground="var(--card-c)"
+                  triggerBorderColor="var(--line)"
+                />
+              </div>
+              <span className="text-sm" style={{ color: 'var(--text-3)' }}>
+                —
+              </span>
+              <div className="w-32">
+                <DatePicker
+                  value={dateTo}
+                  onChange={(v) => {
+                    setDateTo(v);
+                    setPage(1);
+                  }}
+                  placeholder="Hasta"
+                  minDate={dateFrom}
+                  align="right"
+                  triggerBackground="var(--card-c)"
+                  triggerBorderColor="var(--line)"
+                />
+              </div>
+              {(dateFrom || dateTo) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDateFrom('');
+                    setDateTo('');
+                    setPage(1);
+                  }}
+                  className="absolute top-full right-0 mt-1 text-xs font-medium cursor-pointer whitespace-nowrap"
+                  style={{ color: 'var(--accent-c)' }}
+                >
+                  Quitar rango
+                </button>
+              )}
             </div>
-            <span className="text-sm" style={{ color: 'var(--text-3)' }}>
-              —
-            </span>
-            <div className="w-32">
-              <DatePicker
-                value={dateTo}
-                onChange={(v) => {
-                  setDateTo(v);
-                  setPage(1);
-                }}
-                placeholder="Hasta"
-                minDate={dateFrom}
-                align="right"
-                triggerBackground="var(--card-c)"
-                triggerBorderColor="var(--line)"
-              />
-            </div>
-            {(dateFrom || dateTo) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setDateFrom('');
-                  setDateTo('');
-                  setPage(1);
-                }}
-                className="text-xs font-medium cursor-pointer shrink-0"
-                style={{ color: 'var(--accent-c)' }}
-              >
-                Quitar rango
-              </button>
-            )}
           </div>
         </div>
       </div>

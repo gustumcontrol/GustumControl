@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import writeXlsxFile from 'write-excel-file/browser';
 import type { SheetData } from 'write-excel-file/browser';
 import { Input } from '@/components/ui/input';
@@ -20,10 +20,14 @@ const TYPE_FILTERS: { value: 'all' | 'Doble' | 'Triple'; label: string }[] = [
   { value: 'Triple', label: 'Triple' },
 ];
 
+// El export a Excel siempre trae todas las columnas, sin importar qué haya
+// elegido ocultar el usuario en la tabla — eso es solo una preferencia de
+// vista, no filtra los datos exportados.
 const EXPORT_COLUMNS = [
   { header: 'Huésped', width: 22 },
   { header: 'Habitación', width: 12 },
   { header: 'Tipo', width: 10 },
+  { header: 'Teléfono', width: 14 },
   { header: 'Municipio', width: 16 },
   { header: 'Provincia', width: 16 },
   { header: 'Entrada', width: 12 },
@@ -33,6 +37,7 @@ const EXPORT_COLUMNS = [
   { header: 'Método de pago', width: 15 },
   { header: 'Total', width: 10 },
   { header: 'Ticket', width: 14 },
+  { header: 'Reservada', width: 12 },
   { header: 'Cerrada', width: 12 },
 ];
 
@@ -49,6 +54,7 @@ async function exportEntriesToXlsx(entries: ReservationHistory[]) {
     { value: e.guest_name },
     { value: e.room_number },
     { value: e.room_type },
+    { value: e.phone ?? '' },
     { value: e.municipio ?? '' },
     { value: e.provincia ?? '' },
     { value: new Date(e.check_in), type: Date, format: 'dd/mm/yyyy' },
@@ -58,12 +64,125 @@ async function exportEntriesToXlsx(entries: ReservationHistory[]) {
     { value: e.payment_method ?? '' },
     { value: e.total, type: Number, format: '$#,##0.00', align: 'left' },
     { value: e.ticket ?? '' },
+    e.created_at
+      ? { value: new Date(e.created_at), type: Date, format: 'dd/mm/yyyy' }
+      : { value: '—' },
     { value: new Date(e.archived_at), type: Date, format: 'dd/mm/yyyy' },
   ]);
 
   await writeXlsxFile([headerRow, ...dataRows], {
     columns: EXPORT_COLUMNS.map((c) => ({ width: c.width })),
   }).toFile(`historial-reservas-${todayISOInHotelTimezone()}.xlsx`);
+}
+
+type ColumnKey =
+  | 'guest'
+  | 'room'
+  | 'type'
+  | 'phone'
+  | 'municipio'
+  | 'provincia'
+  | 'checkIn'
+  | 'checkOut'
+  | 'nights'
+  | 'boardPlan'
+  | 'paymentMethod'
+  | 'total'
+  | 'ticket'
+  | 'createdAt'
+  | 'archivedAt';
+
+// Define qué columnas existen y en qué orden se dibujan — tanto el
+// encabezado como cada fila se arman recorriendo esta misma lista filtrada
+// por `visibleColumns`, así siempre quedan sincronizados.
+const COLUMN_DEFS: { key: ColumnKey; label: string }[] = [
+  { key: 'guest', label: 'Huésped' },
+  { key: 'room', label: 'Habitación' },
+  { key: 'type', label: 'Tipo' },
+  { key: 'phone', label: 'Teléfono' },
+  { key: 'municipio', label: 'Municipio' },
+  { key: 'provincia', label: 'Provincia' },
+  { key: 'checkIn', label: 'Entrada' },
+  { key: 'checkOut', label: 'Salida' },
+  { key: 'nights', label: 'Noches' },
+  { key: 'boardPlan', label: 'Régimen' },
+  { key: 'paymentMethod', label: 'Método de pago' },
+  { key: 'total', label: 'Total' },
+  { key: 'ticket', label: 'Ticket' },
+  { key: 'createdAt', label: 'Reservada' },
+  { key: 'archivedAt', label: 'Cerrada' },
+];
+
+// Reservada y Cerrada arrancan destildadas — el resto, visible por default.
+const DEFAULT_HIDDEN_COLUMNS = new Set<ColumnKey>(['createdAt', 'archivedAt']);
+const DEFAULT_COLUMN_VISIBILITY = Object.fromEntries(
+  COLUMN_DEFS.map((c) => [c.key, !DEFAULT_HIDDEN_COLUMNS.has(c.key)])
+) as Record<ColumnKey, boolean>;
+
+const COLUMN_STORAGE_KEY = 'reservation-history-visible-columns';
+
+function ColumnPicker({
+  visible,
+  onToggle,
+}: {
+  visible: Record<ColumnKey, boolean>;
+  onToggle: (key: ColumnKey) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="relative flex shrink-0" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        title="Columnas visibles"
+        aria-label="Columnas visibles"
+        className="rounded-lg flex items-center justify-center cursor-pointer"
+        style={{ background: '#FFFFFF', border: '1px solid var(--line)', padding: '10px 16px' }}
+      >
+        <Icon name="table-columns" style="duotone" size={14} color="var(--text-3)" />
+      </button>
+
+      {open && (
+        <div
+          className="absolute top-full right-0 mt-1 w-56 max-h-80 overflow-y-auto rounded-lg shadow-2xl z-20 p-1.5 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-150"
+          style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
+        >
+          <p
+            className="px-3 pb-1.5 pt-1 text-[10px] font-semibold uppercase tracking-wider"
+            style={{ color: 'var(--text-3)' }}
+          >
+            Columnas visibles
+          </p>
+          {COLUMN_DEFS.map((col) => (
+            <label
+              key={col.key}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors hover:bg-[var(--raised)]"
+              style={{ color: 'var(--text-2)' }}
+            >
+              <input
+                type="checkbox"
+                checked={visible[col.key]}
+                onChange={() => onToggle(col.key)}
+                className="cursor-pointer"
+              />
+              {col.label}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function TicketCell({ id, ticket }: { id: string; ticket: string | null }) {
@@ -88,6 +207,43 @@ function TicketCell({ id, ticket }: { id: string; ticket: string | null }) {
       style={{ color: 'var(--text-2)', borderColor: 'var(--input)' }}
     />
   );
+}
+
+function renderHistoryCell(key: ColumnKey, e: ReservationHistory) {
+  switch (key) {
+    case 'guest':
+      return e.guest_name;
+    case 'room':
+      return e.room_number;
+    case 'type':
+      return e.room_type;
+    case 'phone':
+      return e.phone ?? '—';
+    case 'municipio':
+      return e.municipio ?? '—';
+    case 'provincia':
+      return e.provincia ?? '—';
+    case 'checkIn':
+      return e.check_in;
+    case 'checkOut':
+      return e.check_out;
+    case 'nights':
+      return e.nights;
+    case 'boardPlan':
+      return e.board_plan ?? 'Desayuno incluido';
+    case 'paymentMethod':
+      return e.payment_method ?? '—';
+    case 'total':
+      return `$${e.total}`;
+    case 'ticket':
+      return <TicketCell key={`${e.id}:${e.ticket ?? ''}`} id={e.id} ticket={e.ticket} />;
+    case 'createdAt':
+      return e.created_at ? new Date(e.created_at).toLocaleDateString() : '—';
+    case 'archivedAt':
+      return new Date(e.archived_at).toLocaleDateString();
+    default:
+      return null;
+  }
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
@@ -115,6 +271,31 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
   const [isExporting, setIsExporting] = useState(false);
   const [pageSize, setPageSize] = useState(20);
   const [page, setPage] = useState(1);
+  const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(
+    DEFAULT_COLUMN_VISIBILITY
+  );
+
+  useEffect(() => {
+    const stored = localStorage.getItem(COLUMN_STORAGE_KEY);
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setVisibleColumns({ ...DEFAULT_COLUMN_VISIBILITY, ...parsed });
+    } catch {
+      // Preferencia guardada corrupta — se ignora y se queda con el default.
+    }
+  }, []);
+
+  const toggleColumn = (key: ColumnKey) => {
+    setVisibleColumns((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const columns = COLUMN_DEFS.filter((c) => visibleColumns[c.key]);
 
   const totalNights = entries.reduce((sum, e) => sum + e.nights, 0);
   const totalIncome = entries.reduce((sum, e) => sum + Number(e.total), 0);
@@ -206,9 +387,11 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logoexcel.png" alt="Exportar a Excel" className="w-4 h-4" />
           </Button>
+
+          <ColumnPicker visible={visibleColumns} onToggle={toggleColumn} />
         </div>
 
-        <div className="flex flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto sm:ml-auto">
           <div
             className="flex items-center gap-1 rounded-lg p-1 max-w-full overflow-x-auto"
             style={{ background: 'var(--card-c)', border: '1px solid var(--line)' }}
@@ -242,54 +425,56 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
             }}
           />
 
-          <div
-            className="hidden sm:flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap"
-            style={{ background: 'var(--raised)' }}
-          >
-            <div className="w-32">
-              <DatePicker
-                value={dateFrom}
-                onChange={(v) => {
-                  setDateFrom(v);
-                  if (dateTo && v > dateTo) setDateTo('');
-                  setPage(1);
-                }}
-                placeholder="Desde"
-                triggerBackground="var(--card-c)"
-                triggerBorderColor="var(--line)"
-              />
+          <div className="hidden sm:block">
+            <div
+              className="relative flex items-center gap-2 rounded-lg py-2"
+              style={{ background: 'var(--raised)' }}
+            >
+              <div className="w-32">
+                <DatePicker
+                  value={dateFrom}
+                  onChange={(v) => {
+                    setDateFrom(v);
+                    if (dateTo && v > dateTo) setDateTo('');
+                    setPage(1);
+                  }}
+                  placeholder="Desde"
+                  triggerBackground="var(--card-c)"
+                  triggerBorderColor="var(--line)"
+                />
+              </div>
+              <span className="text-sm" style={{ color: 'var(--text-3)' }}>
+                —
+              </span>
+              <div className="w-32">
+                <DatePicker
+                  value={dateTo}
+                  onChange={(v) => {
+                    setDateTo(v);
+                    setPage(1);
+                  }}
+                  placeholder="Hasta"
+                  minDate={dateFrom}
+                  align="right"
+                  triggerBackground="var(--card-c)"
+                  triggerBorderColor="var(--line)"
+                />
+              </div>
+              {(dateFrom || dateTo) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDateFrom('');
+                    setDateTo('');
+                    setPage(1);
+                  }}
+                  className="absolute top-full right-0 mt-1 text-xs font-medium cursor-pointer whitespace-nowrap"
+                  style={{ color: 'var(--accent-c)' }}
+                >
+                  Quitar rango
+                </button>
+              )}
             </div>
-            <span className="text-sm" style={{ color: 'var(--text-3)' }}>
-              —
-            </span>
-            <div className="w-32">
-              <DatePicker
-                value={dateTo}
-                onChange={(v) => {
-                  setDateTo(v);
-                  setPage(1);
-                }}
-                placeholder="Hasta"
-                minDate={dateFrom}
-                align="right"
-                triggerBackground="var(--card-c)"
-                triggerBorderColor="var(--line)"
-              />
-            </div>
-            {(dateFrom || dateTo) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setDateFrom('');
-                  setDateTo('');
-                  setPage(1);
-                }}
-                className="text-xs font-medium cursor-pointer shrink-0"
-                style={{ color: 'var(--accent-c)' }}
-              >
-                Quitar rango
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -313,78 +498,47 @@ export function ReservationHistoryList({ entries }: { entries: ReservationHistor
           className="rounded-lg overflow-x-auto"
           style={{ border: '1px solid var(--line)', background: 'var(--card-c)' }}
         >
-          <table className="w-full text-sm" style={{ minWidth: '72rem' }}>
+          <table className="w-full text-sm" style={{ minWidth: '78rem' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--line)' }}>
-                {[
-                  'Huésped',
-                  'Habitación',
-                  'Tipo',
-                  'Municipio',
-                  'Provincia',
-                  'Entrada',
-                  'Salida',
-                  'Noches',
-                  'Régimen',
-                  'Método de pago',
-                  'Total',
-                  'Ticket',
-                  'Cerrada',
-                ].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      className="text-left font-medium px-4 py-3"
-                      style={{ color: 'var(--text-2)' }}
-                    >
-                      {h}
-                    </th>
-                  )
-                )}
+                {columns.map((col) => (
+                  <th
+                    key={col.key}
+                    className="text-left font-medium px-4 py-3 whitespace-nowrap"
+                    style={{ color: 'var(--text-2)' }}
+                  >
+                    {col.label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {paginated.map((e) => (
                 <tr key={e.id} style={{ borderBottom: '1px solid var(--line)' }}>
-                  <td className="px-4 py-3 font-medium" style={{ color: 'var(--light)' }}>
-                    {e.guest_name}
-                  </td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
-                    {e.room_number}
-                  </td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
-                    {e.room_type}
-                  </td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
-                    {e.municipio ?? '—'}
-                  </td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
-                    {e.provincia ?? '—'}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
-                    {e.check_in}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
-                    {e.check_out}
-                  </td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
-                    {e.nights}
-                  </td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
-                    {e.board_plan ?? 'Desayuno incluido'}
-                  </td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
-                    {e.payment_method ?? '—'}
-                  </td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
-                    ${e.total}
-                  </td>
-                  <td className="px-2 py-2">
-                    <TicketCell key={`${e.id}:${e.ticket ?? ''}`} id={e.id} ticket={e.ticket} />
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--text-3)' }}>
-                    {new Date(e.archived_at).toLocaleDateString()}
-                  </td>
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className={
+                        col.key === 'ticket'
+                          ? 'px-2 py-2'
+                          : col.key === 'guest'
+                            ? 'px-4 py-3 font-medium'
+                            : ['checkIn', 'checkOut', 'createdAt', 'archivedAt'].includes(col.key)
+                              ? 'px-4 py-3 whitespace-nowrap'
+                              : 'px-4 py-3'
+                      }
+                      style={{
+                        color:
+                          col.key === 'guest'
+                            ? 'var(--light)'
+                            : col.key === 'archivedAt' || col.key === 'createdAt'
+                              ? 'var(--text-3)'
+                              : 'var(--text-2)',
+                      }}
+                    >
+                      {renderHistoryCell(col.key, e)}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
