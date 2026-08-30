@@ -48,7 +48,7 @@ export function EditReservationDialog({
   const [guestName, setGuestName] = useState(reservation.guest_name);
   const [guestsCount, setGuestsCount] = useState(reservation.guests_count);
   const [checkIn, setCheckIn] = useState(reservation.check_in);
-  const [nights, setNights] = useState(reservation.nights);
+  const [checkOut, setCheckOut] = useState(reservation.check_out ?? '');
   const [boardPlan, setBoardPlan] = useState(reservation.board_plan ?? '');
   const [dobleOccupancy, setDobleOccupancy] = useState<'doble' | 'individual'>(
     reservation.room?.type === 'Doble' && reservation.price_per_night === DOBLE_INDIVIDUAL_PRICE
@@ -101,19 +101,30 @@ export function EditReservationDialog({
   const price = boardPlan
     ? (boardPriceByName.get(boardPlan) ?? 0) * (Number(guestsCount) || 0)
     : basePrice;
-  const total = (Number(price) || 0) * (Number(nights) || 0);
 
   const provinceOptions = useMemo(
     () => (PROVINCES_BY_COUNTRY[country] ?? []).map((name) => ({ value: name, label: name })),
     [country]
   );
 
-  const checkOut = useMemo(() => {
-    if (!checkIn || !nights) return '';
+  // Las noches se cuentan a partir de entrada/salida (ya no se eligen a
+  // mano) — se muestran nada más como referencia para quien edita la reserva.
+  const nights = useMemo(() => {
+    if (!checkIn || !checkOut) return 0;
+    const diffDays = Math.round(
+      (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000
+    );
+    return diffDays > 0 ? diffDays : 0;
+  }, [checkIn, checkOut]);
+
+  const minCheckOut = useMemo(() => {
+    if (!checkIn) return undefined;
     const d = new Date(checkIn);
-    d.setDate(d.getDate() + Number(nights));
+    d.setDate(d.getDate() + 1);
     return d.toISOString().slice(0, 10);
-  }, [checkIn, nights]);
+  }, [checkIn]);
+
+  const total = (Number(price) || 0) * (Number(nights) || 0);
 
   const resetToOriginal = () => {
     setRoomId(reservation.room_id);
@@ -121,7 +132,7 @@ export function EditReservationDialog({
     setGuestName(reservation.guest_name);
     setGuestsCount(reservation.guests_count);
     setCheckIn(reservation.check_in);
-    setNights(reservation.nights);
+    setCheckOut(reservation.check_out ?? '');
     setBoardPlan(reservation.board_plan ?? '');
     setDobleOccupancy(
       reservation.room?.type === 'Doble' && reservation.price_per_night === DOBLE_INDIVIDUAL_PRICE
@@ -149,8 +160,8 @@ export function EditReservationDialog({
       setError('Falta el nombre del huésped.');
       return;
     }
-    if (!checkIn || !nights || nights < 1) {
-      setError('Falta la fecha de entrada o la cantidad de noches.');
+    if (!checkIn || !checkOut || checkOut <= checkIn) {
+      setError('Falta la fecha de entrada/salida, o la salida no es posterior a la entrada.');
       return;
     }
 
@@ -302,11 +313,32 @@ export function EditReservationDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="edit-checkIn">Entrada</Label>
-              <DatePicker id="edit-checkIn" value={checkIn} onChange={setCheckIn} />
+              <DatePicker
+                id="edit-checkIn"
+                value={checkIn}
+                onChange={(v) => {
+                  setCheckIn(v);
+                  // Si la salida quedó igual o antes que la nueva entrada, la
+                  // corremos un día después para que el rango siga siendo válido.
+                  if (v && checkOut && v >= checkOut) {
+                    const d = new Date(v);
+                    d.setDate(d.getDate() + 1);
+                    setCheckOut(d.toISOString().slice(0, 10));
+                  }
+                }}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-nights">Noches</Label>
-              <NumberSelect id="edit-nights" value={nights} onChange={setNights} />
+              <Label htmlFor="edit-checkOut">Salida</Label>
+              <DatePicker
+                id="edit-checkOut"
+                value={checkOut}
+                onChange={setCheckOut}
+                minDate={minCheckOut}
+              />
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                {nights} noche{nights === 1 ? '' : 's'}
+              </p>
             </div>
           </div>
 
@@ -361,7 +393,9 @@ export function EditReservationDialog({
             className="rounded-lg px-4 py-3 text-sm flex items-center justify-between"
             style={{ background: 'var(--raised)', color: 'var(--text-2)' }}
           >
-            <span>Salida: {checkOut || '—'}</span>
+            <span>
+              {nights} noche{nights === 1 ? '' : 's'}
+            </span>
             <span>Total: ${total.toFixed(2)}</span>
           </div>
 

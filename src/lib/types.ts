@@ -437,6 +437,7 @@ export type Database = {
           check_in: string;
           check_out: string;
           country: string | null;
+          created_at: string | null;
           floor: string;
           guest_name: string;
           guests_count: number;
@@ -446,6 +447,7 @@ export type Database = {
           notes: string | null;
           original_reservation_id: string;
           payment_method: string | null;
+          phone: string | null;
           price_per_night: number;
           provincia: string | null;
           room_number: string;
@@ -461,6 +463,7 @@ export type Database = {
           check_in: string;
           check_out: string;
           country?: string | null;
+          created_at?: string | null;
           floor: string;
           guest_name: string;
           guests_count: number;
@@ -470,6 +473,7 @@ export type Database = {
           notes?: string | null;
           original_reservation_id: string;
           payment_method?: string | null;
+          phone?: string | null;
           price_per_night: number;
           provincia?: string | null;
           room_number: string;
@@ -485,6 +489,7 @@ export type Database = {
           check_in?: string;
           check_out?: string;
           country?: string | null;
+          created_at?: string | null;
           floor?: string;
           guest_name?: string;
           guests_count?: number;
@@ -494,6 +499,7 @@ export type Database = {
           notes?: string | null;
           original_reservation_id?: string;
           payment_method?: string | null;
+          phone?: string | null;
           price_per_night?: number;
           provincia?: string | null;
           room_number?: string;
