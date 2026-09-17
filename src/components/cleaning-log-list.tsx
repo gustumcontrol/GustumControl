@@ -22,7 +22,8 @@ import { todayISOInHotelTimezone } from '@/lib/date';
 
 export type CleaningLogRow = {
   id: string;
-  reservation_id: string;
+  reservation_id: string | null;
+  room_id: string | null;
   room_number: string;
   status: string;
   changed_at: string;
@@ -30,7 +31,7 @@ export type CleaningLogRow = {
 };
 
 type CleaningSession = {
-  reservationId: string;
+  groupId: string;
   roomNumber: string;
   entries: CleaningLogRow[];
   startedAt: string | null;
@@ -86,21 +87,53 @@ async function exportSessionsToXlsx(sessions: CleaningSession[]) {
 }
 
 function groupSessions(entries: CleaningLogRow[]): CleaningSession[] {
+  // Las entradas con reserva se agrupan por reservation_id (único por
+  // estadía, nunca se repite). Las de habitación (sin reserva, "mandar a
+  // limpieza") no tienen ese lujo: el mismo room_id se reutiliza cada vez
+  // que se vuelve a mandar la habitación a limpieza, así que cada 'PENDIENTE'
+  // arranca un ciclo nuevo en vez de mezclarse con el ciclo anterior de esa
+  // misma habitación.
+  const chronological = [...entries].sort(
+    (a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime()
+  );
+
+  const groups: CleaningLogRow[][] = [];
   const byReservation = new Map<string, CleaningLogRow[]>();
-  for (const e of entries) {
-    (byReservation.get(e.reservation_id) ?? byReservation.set(e.reservation_id, []).get(e.reservation_id)!).push(e);
+  const openRoomSession = new Map<string, CleaningLogRow[]>();
+
+  for (const e of chronological) {
+    if (e.reservation_id) {
+      let group = byReservation.get(e.reservation_id);
+      if (!group) {
+        group = [];
+        byReservation.set(e.reservation_id, group);
+        groups.push(group);
+      }
+      group.push(e);
+      continue;
+    }
+
+    const roomId = e.room_id!;
+    const open = openRoomSession.get(roomId);
+    if (e.status === 'PENDIENTE' || !open) {
+      const group = [e];
+      openRoomSession.set(roomId, group);
+      groups.push(group);
+      continue;
+    }
+
+    open.push(e);
+    if (e.status === 'LIMPIADO') {
+      openRoomSession.delete(roomId);
+    }
   }
 
-  const sessions: CleaningSession[] = [];
-  for (const [reservationId, group] of byReservation) {
-    const sorted = [...group].sort(
-      (a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime()
-    );
+  const sessions: CleaningSession[] = groups.map((sorted) => {
     const started = sorted.find((e) => e.status === 'EN PROCESO');
     const finished = [...sorted].reverse().find((e) => e.status === 'LIMPIADO');
 
-    sessions.push({
-      reservationId,
+    return {
+      groupId: sorted[0].id,
       roomNumber: sorted[0].room_number,
       entries: sorted,
       startedAt: started?.changed_at ?? null,
@@ -112,8 +145,8 @@ function groupSessions(entries: CleaningLogRow[]): CleaningSession[] {
           : null,
       isComplete: !!finished,
       lastActivityAt: sorted[sorted.length - 1].changed_at,
-    });
-  }
+    };
+  });
 
   return sessions.sort((a, b) => {
     const aTime = a.lastActivityAt;
@@ -411,7 +444,7 @@ export function CleaningLogList({ entries }: { entries: CleaningLogRow[] }) {
             <tbody>
               {paginated.map((s) => (
                 <tr
-                  key={s.reservationId}
+                  key={s.groupId}
                   onClick={() => setSelected(s)}
                   className="cursor-pointer transition-colors hover:bg-[var(--raised)]"
                   style={{ borderBottom: '1px solid var(--line)' }}

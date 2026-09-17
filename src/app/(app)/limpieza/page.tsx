@@ -16,17 +16,20 @@ export default async function LimpiezaPage() {
   const supabase = await createSupabaseServerClient();
   const [{ data }, { data: hotel }] = await Promise.all([
     supabase
-      .from('reservations')
-      .select('id, guest_name, cleaning_status, rooms(number, floor)')
+      .from('room_status')
+      .select('room_id, reservation_id, guest_name, cleaning_status, number, floor')
       .eq('hotel_id', hotelId!)
-      .in('cleaning_status', ['PENDIENTE', 'EN PROCESO'])
-      .order('created_at', { ascending: false }),
+      .eq('computed_status', 'PENDIENTE LIMPIEZA')
+      .order('number'),
     supabase.from('hotels').select('slug').eq('id', hotelId!).single(),
   ]);
 
   const tasks: CleaningTask[] = (data ?? []).map((r) => ({
-    ...r,
-    room: Array.isArray(r.rooms) ? r.rooms[0] ?? null : r.rooms,
+    room_id: r.room_id!,
+    reservation_id: r.reservation_id,
+    guest_name: r.guest_name,
+    cleaning_status: r.cleaning_status!,
+    room: { number: r.number!, floor: r.floor! },
   }));
 
   return (

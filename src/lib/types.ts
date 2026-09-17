@@ -121,7 +121,8 @@ export type Database = {
           changed_at: string;
           changed_by: string | null;
           id: string;
-          reservation_id: string;
+          reservation_id: string | null;
+          room_id: string | null;
           room_number: string;
           status: string;
           hotel_id: string;
@@ -130,7 +131,8 @@ export type Database = {
           changed_at?: string;
           changed_by?: string | null;
           id?: string;
-          reservation_id: string;
+          reservation_id?: string | null;
+          room_id?: string | null;
           room_number: string;
           status: string;
           hotel_id?: string;
@@ -139,7 +141,8 @@ export type Database = {
           changed_at?: string;
           changed_by?: string | null;
           id?: string;
-          reservation_id?: string;
+          reservation_id?: string | null;
+          room_id?: string | null;
           room_number?: string;
           status?: string;
           hotel_id?: string;
@@ -640,6 +643,7 @@ export type Database = {
         Row: {
           active: boolean;
           capacity: number;
+          cleaning_status: string;
           floor: string;
           id: string;
           number: string;
@@ -649,6 +653,7 @@ export type Database = {
         Insert: {
           active?: boolean;
           capacity: number;
+          cleaning_status?: string;
           floor: string;
           id?: string;
           number: string;
@@ -658,6 +663,7 @@ export type Database = {
         Update: {
           active?: boolean;
           capacity?: number;
+          cleaning_status?: string;
           floor?: string;
           id?: string;
           number?: string;
@@ -731,6 +737,14 @@ export type Database = {
       };
       update_cleaning_status: {
         Args: { p_reservation_id: string; p_status: string };
+        Returns: undefined;
+      };
+      mark_room_for_cleaning: {
+        Args: { p_room_id: string };
+        Returns: undefined;
+      };
+      update_room_cleaning_status: {
+        Args: { p_room_id: string; p_status: string };
         Returns: undefined;
       };
       open_maintenance_issue: {
