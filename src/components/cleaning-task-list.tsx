@@ -2,14 +2,15 @@
 
 import { useState, useTransition } from 'react';
 import { Icon } from '@/components/icon';
-import { updateCleaningStatus } from '@/lib/actions/cleaning';
+import { updateCleaningStatus, updateRoomCleaningStatus } from '@/lib/actions/cleaning';
 import { useRealtimeRefresh } from '@/lib/hooks/use-realtime-refresh';
 import { floorLabel } from '@/lib/floor-label';
 import type { CleaningStatus } from '@/lib/types';
 
 export type CleaningTask = {
-  id: string;
-  guest_name: string;
+  room_id: string;
+  reservation_id: string | null;
+  guest_name: string | null;
   cleaning_status: string;
   room: { number: string; floor: string } | null;
 };
@@ -68,7 +69,7 @@ function TaskRow({
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm leading-5 font-medium truncate" style={{ color: 'var(--light)' }}>
-            {task.guest_name}
+            {task.guest_name ?? 'Limpieza de habitación'}
           </p>
           <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
             {STATUS_LABEL[task.cleaning_status] ?? task.cleaning_status}
@@ -99,7 +100,7 @@ export function CleaningTaskList({
   tasks: CleaningTask[];
   hotelSlug?: string | null;
 }) {
-  useRealtimeRefresh(['reservations', 'cleaning_log']);
+  useRealtimeRefresh(['reservations', 'cleaning_log', 'rooms']);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
@@ -114,12 +115,16 @@ export function CleaningTaskList({
     );
   }
 
-  const handleAdvance = (id: string, current: string) => {
-    const next = NEXT_STATUS[current];
+  const handleAdvance = (task: CleaningTask) => {
+    const next = NEXT_STATUS[task.cleaning_status];
     if (!next) return;
-    setPendingId(id);
+    setPendingId(task.room_id);
     startTransition(async () => {
-      await updateCleaningStatus(id, next);
+      if (task.reservation_id) {
+        await updateCleaningStatus(task.reservation_id, next);
+      } else {
+        await updateRoomCleaningStatus(task.room_id, next);
+      }
       setPendingId(null);
     });
   };
@@ -128,10 +133,10 @@ export function CleaningTaskList({
     <div className="flex flex-col gap-3">
       {tasks.map((task) => (
         <TaskRow
-          key={task.id}
+          key={task.room_id}
           task={task}
-          isPending={pendingId === task.id}
-          onAdvance={() => handleAdvance(task.id, task.cleaning_status)}
+          isPending={pendingId === task.room_id}
+          onAdvance={() => handleAdvance(task)}
           hotelSlug={hotelSlug}
         />
       ))}

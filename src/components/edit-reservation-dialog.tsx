@@ -335,6 +335,7 @@ export function EditReservationDialog({
                 value={checkOut}
                 onChange={setCheckOut}
                 minDate={minCheckOut}
+                align="right"
               />
               <p className="text-xs" style={{ color: 'var(--text-3)' }}>
                 {nights} noche{nights === 1 ? '' : 's'}

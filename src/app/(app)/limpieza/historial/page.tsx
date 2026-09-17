@@ -13,7 +13,7 @@ export default async function LimpiezaHistorialPage() {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('cleaning_log')
-    .select('id, reservation_id, room_number, status, changed_at, profiles(full_name)')
+    .select('id, reservation_id, room_id, room_number, status, changed_at, profiles(full_name)')
     .eq('hotel_id', hotelId!)
     .order('changed_at', { ascending: false })
     .limit(500);

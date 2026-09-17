@@ -48,7 +48,7 @@ export function RoomGrid({
     };
 
     const channel = supabase.channel('room-grid-changes');
-    for (const table of ['reservations', 'maintenance_issues', 'room_staff_assignments']) {
+    for (const table of ['reservations', 'maintenance_issues', 'room_staff_assignments', 'rooms']) {
       channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh);
     }
     channel.subscribe();

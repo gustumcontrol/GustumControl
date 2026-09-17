@@ -19,6 +19,7 @@ import { CustomSelect } from '@/components/custom-select';
 import { closeReservation } from '@/lib/actions/reservations';
 import { assignRoomToStaff, releaseStaffRoom } from '@/lib/actions/staff-assignments';
 import { openMaintenanceIssue } from '@/lib/actions/maintenance';
+import { markRoomForCleaning } from '@/lib/actions/cleaning';
 import { supabase } from '@/lib/supabase/client';
 import { PRIORITY_META, PRIORITY_OPTIONS } from '@/lib/maintenance-priority';
 import type { RoomStatus, ComputedRoomStatus, MaintenancePriority } from '@/lib/types';
@@ -81,6 +82,18 @@ export function RoomDetailDialog({
         return;
       }
       resetForms();
+      setOpen(false);
+    });
+  };
+
+  const handleMarkForCleaning = () => {
+    setError('');
+    startTransition(async () => {
+      const result = await markRoomForCleaning(room.room_id!);
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
       setOpen(false);
     });
   };
@@ -271,6 +284,10 @@ export function RoomDetailDialog({
               <span className="font-medium">{room.staff_name}</span>
             </div>
           </div>
+        ) : status === 'PENDIENTE LIMPIEZA' && !room.reservation_id ? (
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>
+            Esta habitación fue marcada para limpieza y está bloqueada hasta que se complete.
+          </p>
         ) : (
           <div className="flex flex-col gap-2 text-sm" style={{ color: 'var(--text-2)' }}>
             {isFuture && (
@@ -345,6 +362,14 @@ export function RoomDetailDialog({
                 <>
                   <Button variant="outline" className="w-full" onClick={() => setMode('assign')}>
                     Asignar a empleado
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleMarkForCleaning}
+                    disabled={isPending}
+                  >
+                    {isPending ? 'Mandando...' : 'Mandar a limpieza'}
                   </Button>
                   <Link href={`/reservas/nueva?room=${room.room_id}`} className="w-full">
                     <Button className="w-full">Crear reserva para hoy</Button>
