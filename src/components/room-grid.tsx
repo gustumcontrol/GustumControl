@@ -6,6 +6,7 @@ import { RoomCard } from '@/components/room-card';
 import { RoomDetailDialog } from '@/components/room-detail-dialog';
 import { Icon } from '@/components/icon';
 import { sortByRoomNumber } from '@/lib/sort-rooms';
+import { ROOM_STATUS_SOURCE_TABLES } from '@/lib/room-status';
 import type { RoomStatus } from '@/lib/types';
 
 const FLOOR_ORDINALS = [
@@ -48,7 +49,7 @@ export function RoomGrid({
     };
 
     const channel = supabase.channel('room-grid-changes');
-    for (const table of ['reservations', 'maintenance_issues', 'room_staff_assignments', 'rooms']) {
+    for (const table of ROOM_STATUS_SOURCE_TABLES) {
       channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh);
     }
     channel.subscribe();
