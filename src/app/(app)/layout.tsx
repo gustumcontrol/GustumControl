@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/sidebar';
 import { AppHeader } from '@/components/app-header';
 import { MobileSidebarProvider } from '@/components/mobile-sidebar-context';
 import { getHotelContext } from '@/lib/hotel-context';
+import { AVAILABLE_ROOM_STATUSES } from '@/lib/room-status';
 import type { Role, NavCategory } from '@/lib/types';
 
 const OPERACION: NavCategory = {
@@ -75,6 +76,7 @@ const getHotelExtras = cache(async (hotelId: string, isAdmin: boolean) => {
     bookingCount,
     limpiezaCount,
     mantenimientoCount,
+    availableRoomsCount,
   ] = await Promise.all([
     supabase.from('hotels').select('name').eq('id', hotelId).single(),
     isAdmin
@@ -101,11 +103,17 @@ const getHotelExtras = cache(async (hotelId: string, isAdmin: boolean) => {
       .select('id', { count: 'exact', head: true })
       .eq('hotel_id', hotelId)
       .neq('status', 'REALIZADO'),
+    supabase
+      .from('room_status')
+      .select('room_id', { count: 'exact', head: true })
+      .eq('hotel_id', hotelId)
+      .in('computed_status', AVAILABLE_ROOM_STATUSES),
   ]);
 
   return {
     hotelName: hotelRow?.name ?? '',
     hotels: hotelsList ?? [],
+    availableRooms: availableRoomsCount.count ?? 0,
     counts: {
       '/reservas': reservasCount.count ?? 0,
       '/booking': bookingCount.count ?? 0,
@@ -160,7 +168,7 @@ async function AppHeaderData({
   roleLabel: string;
   initial: string;
 }) {
-  const { hotelName, hotels } = await getHotelExtras(hotelId, isAdmin);
+  const { hotelName, hotels, availableRooms } = await getHotelExtras(hotelId, isAdmin);
 
   return (
     <AppHeader
@@ -168,6 +176,7 @@ async function AppHeaderData({
       hotelId={hotelId}
       hotelName={hotelName}
       hotels={hotels}
+      availableRooms={availableRooms}
       displayName={displayName}
       roleLabel={roleLabel}
       initial={initial}
